@@ -1,0 +1,100 @@
+# ═══════════════════════════════════════════════════════════════════
+#  永劫无间 剪辑项目 —— 版本库范围
+#
+#  实测体积（2026-09-29）：整个项目 11.67 GB，其中
+#     .video-tools\   8.28 GB   工具环境（venv 2.64 / 模型权重 4.90 / LosslessCut 0.60 / downloads 0.14）
+#     123\            3.39 GB   剪辑任务工作目录（preview 1.57G / cache 1.22G / shots 587M / audio 73M）
+#     其余全部        约 1 MB   ← 这才是真正的源码与文档，进版本库
+#
+#  原则：版本库只装"规则、脚本、配置、规格"。可重装的工具与工作状态一律不进。
+#  成片一律在 E:\Cujian导出，与本仓库无关。
+# ═══════════════════════════════════════════════════════════════════
+
+# ── 工具环境与模型权重（8.28 GB，可重装）─────────────────────────────────
+# venv 由系统 Python 重建即可（见 AGENTS.md §2 环境铁律）；
+# 模型权重由 faster-whisper 首次运行时重新下载。
+.video-tools/
+*.safetensors
+*.bin
+*.pt
+*.pth.tmp
+
+# ── 剪辑任务工作目录（3.39 GB）─────────────────────────────────────────
+# 工作状态不是源码。成片在 E:\Cujian导出；timeline/reports 等审计记录
+# 由 scripts\cleanup_after_master.ps1 保证留在盘上。
+# 确实要单独版本化某个任务的产物时：git add -f "123\...\reports\xxx.md"
+123/
+
+# ── 媒体与大二进制：一律不进版本库 ────────────────────────────────────
+# 视频/音频
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.webm
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+# 图片（9007 张分析抽帧全在 123\，这里再加一道保险）
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.webp
+# 归档
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.tgz
+*.iso
+# 可执行与库
+*.exe
+*.dll
+*.pyd
+*.so
+*.dylib
+*.jar
+# 数据大文件
+*.parquet
+*.npy
+*.npz
+*.onnx
+*.ckpt
+*.pt2
+
+# ── 临时与中间产物 ───────────────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.rej
+*~
+*.swp
+*.swo
+Thumbs.db
+desktop.ini
+.DS_Store
+ehthumbs.db
+$RECYCLE.BIN/
+
+# ── Python 字节码（编译产物，不是源码）───────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# 注意：以下**必须**进版本库，不要加进忽略列表——
+#   *.py    skills\naraka-highlight-studio\scripts\ 下的 7 个分析/校验脚本是项目源码
+#   *.ps1   scripts\ 下 9 个门禁与工具脚本是项目源码
+#   *.sh    scripts\ 下 2 个 4K 渲染/验收脚本是项目源码
+#   *.md    AGENTS.md / README.md / docs\ / skills\ 全是规则与规格，本项目的核心
+#   *.json  config\ / style_profiles\ / timeline 的 cut list 都是规格
+# 唯一例外是 assets\ 下的真实素材（bgm/sfx/overlays/fonts）：
+#   它们默认按上面的媒体规则排除；确实要入库时用 git add -f，
+#   或者改用 Git LFS（见 README 的「体积与上传」一节）。

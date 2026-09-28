@@ -1,0 +1,33 @@
+{
+  "schema": "naraka-complete-combat-roughcut/v1",
+  "source": "E:\\PR导出\\fixture.mp4",
+  "combat_episodes": [
+    {
+      "id": "combat_001",
+      "source_start": 10.0,
+      "source_end": 30.0,
+      "engage_start": 14.0,
+      "impact_points": [18.0, 24.0],
+      "outcome_time": 27.0,
+      "event_types": ["parry", "kill"],
+      "complete": true,
+      "needs_review": false
+    },
+    {
+      "id": "combat_002",
+      "source_start": 50.0,
+      "source_end": 80.0,
+      "engage_start": 53.0,
+      "impact_points": [60.0, 71.0],
+      "outcome_time": 77.0,
+      "event_types": ["team_save", "multi_kill"],
+      "complete": true,
+      "needs_review": false
+    }
+  ],
+  "deleted_intervals": [
+    {"start": 0.0, "end": 10.0, "category": "travel"},
+    {"start": 30.0, "end": 50.0, "category": "looting"},
+    {"start": 80.0, "end": 100.0, "category": "waiting"}
+  ]
+}

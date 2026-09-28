@@ -1,0 +1,5 @@
+home = %USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python
+include-system-site-packages = false
+version = 3.12.13
+executable = %USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe
+command = %USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m venv C:\Project\永劫无间\.video-tools\venv

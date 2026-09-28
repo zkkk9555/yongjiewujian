@@ -1,0 +1,58 @@
+# 行尾与二进制声明 —— 让版本库行为不依赖任何一台机器的 git 配置
+#
+# 为什么要这个文件：本项目同时含三类对行尾敏感的东西——
+#   .sh   bash 脚本，CRLF 会让它报 "\r: command not found"，必须永远 LF
+#   .ps1  PowerShell 脚本，UTF-8 BOM 决定中文会不会被读成乱码（见 TROUBLESHOOTING.md）
+#   .md   文档，CRLF/LF 都行，但归一化后 diff 才干净
+# 不钉死的话，行为取决于每台机器的 core.autocrlf，迟早出一次怪问题。
+
+# 默认：全部按文本处理，仓库内一律 LF
+* text=auto eol=lf
+
+# bash 脚本：强制 LF，且永远当文本
+*.sh   text eol=lf
+*.bash text eol=lf
+
+# PowerShell：BOM 属于内容，git 不许动；行尾用 CRLF（Windows 原生习惯）
+*.ps1  text eol=crlf
+
+# 源码与配置：文本，LF
+*.py   text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.txt  text eol=lf
+*.md   text eol=lf
+*.cfg  text eol=lf
+*.toml text eol=lf
+
+# 二进制：git 一个字节都不许碰（虽然大部分已被 .gitignore 排除，
+# 这条是第二道保险，防止有人 git add -f 硬塞进来时 git 去尝试做行尾转换）
+*.mp4  binary
+*.mkv  binary
+*.mov  binary
+*.wav  binary
+*.mp3  binary
+*.m4a  binary
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.ttf  binary
+*.otf  binary
+*.zip  binary
+*.7z   binary
+*.gz   binary
+*.pdf  binary
+*.exe  binary
+*.dll  binary
+*.pyd  binary
+*.so   binary
+*.bin  binary
+*.safetensors binary
+*.pt   binary
+*.pth  binary
+*.pyc  binary
+*.onnx binary

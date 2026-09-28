@@ -1,0 +1,29 @@
+{
+  "schema": "naraka-highlight-production-dependencies/v1",
+  "project_root": "C:\\Project\\永劫无间",
+  "base_python": "%LOCALAPPDATA%\\Programs\\Python\\Python312\\python.exe",
+  "base_python_rule": "A venv must be built on a NORMAL system interpreter. Never on a temp/cache/tool-runtime path -- one built under ~\\.cache\\ was destroyed by ordinary system cleanup and took 2.64 GB of working packages with it (AGENTS.md section 2, rule 2).",
+  "shared_python": "C:\\Project\\永劫无间\\.video-tools\\venv\\Scripts\\python.exe",
+  "packages": {
+    "faster-whisper": "1.2.1",
+    "scenedetect": "0.7.1",
+    "auto-editor": "29.3.1",
+    "ctranslate2": "4.8.1",
+    "librosa": "0.11.0",
+    "opentimelineio": "0.18.1"
+  },
+  "machine_tools": {
+    "ffmpeg": "C:\\Project\\永劫无间\\.video-tools\\LosslessCut\\resources\\ffmpeg.exe",
+    "ffprobe": "C:\\Project\\永劫无间\\.video-tools\\LosslessCut\\resources\\ffprobe.exe",
+    "losslesscut": "C:\\Project\\永劫无间\\.video-tools\\LosslessCut\\LosslessCut.exe",
+    "resolution_rule": "Do not hardcode these paths anywhere. Run scripts/check_video_environment.ps1, or read them from scripts/resolve_ffmpeg.ps1 (function Resolve-FfmpegPair when dot-sourced, `-Emit` for shell consumers). The WinGet install these paths previously pointed at has been uninstalled."
+  },
+  "policy": {
+    "reuse_shared_environment": true,
+    "create_per_task_virtualenv": false,
+    "reinstall_existing_packages_per_task": false,
+    "source_media_read_only": true,
+    "prefer_project_then_system": true,
+    "never_depend_on_temp_or_cache_paths": true
+  }
+}

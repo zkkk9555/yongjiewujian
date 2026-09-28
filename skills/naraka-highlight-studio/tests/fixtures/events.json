@@ -1,0 +1,22 @@
+{
+  "events": [
+    {
+      "source": "C:\\media\\match_01.mp4",
+      "source_start": 12.0,
+      "source_end": 16.5,
+      "impact_source": 14.2,
+      "event_types": ["parry", "counter"],
+      "confidence": 0.9,
+      "reason": "fixture"
+    },
+    {
+      "source": "C:\\media\\match_02.mp4",
+      "source_start": 81.0,
+      "source_end": 88.0,
+      "impact_source": 84.0,
+      "event_types": ["ultimate", "kill"],
+      "confidence": 0.82,
+      "reason": "fixture"
+    }
+  ]
+}

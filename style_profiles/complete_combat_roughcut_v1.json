@@ -1,0 +1,50 @@
+{
+  "profile_name": "完整战斗粗剪",
+  "version": "1.0.0",
+  "purpose": "先保证战斗完整性，再进行高燃成片包装",
+  "mode": "complete_combat_roughcut",
+  "selection": {
+    "unit": "combat_episode",
+    "event_types": [
+      "parry",
+      "counter",
+      "combo",
+      "clutch",
+      "team_save",
+      "ultimate",
+      "kill",
+      "multi_kill",
+      "escape"
+    ],
+    "lead_in_seconds": 5,
+    "internal_gap_seconds": 8,
+    "rejoin_window_seconds": 12,
+    "outcome_hold_seconds": 4,
+    "recovery_tail_seconds": 3,
+    "preserve_event_context": true,
+    "require_outcome_before_cut": true,
+    "uncertain_boundary_policy": "keep_and_mark_needs_review",
+    "delete_categories": [
+      "looting",
+      "travel",
+      "waiting",
+      "repetition",
+      "long_no_event"
+    ]
+  },
+  "review": {
+    "default_resolution": "1280x720",
+    "default_fps": 30,
+    "dialogue_subtitles": false,
+    "bgm": false,
+    "decorative_effects": false,
+    "require_gap_audit": true,
+    "require_full_decode_check": true
+  },
+  "delivery": {
+    "preview_first": true,
+    "final_master_after_user_confirmation": true,
+    "keep_source_read_only": true,
+    "keep_rebuildable_timeline": true
+  }
+}

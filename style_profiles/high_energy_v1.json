@@ -1,0 +1,72 @@
+{
+  "profile_name": "高燃卡点",
+  "version": "1.0.0",
+  "format": {
+    "orientation": "horizontal",
+    "width": 3840,
+    "height": 2160,
+    "fps": 60,
+    "target_duration_seconds": {
+      "min": 45,
+      "max": 90
+    },
+    "video_codec": "h264_nvenc",
+    "rate_control": "vbr"
+  },
+  "selection": {
+    "event_types": [
+      "parry",
+      "counter",
+      "combo",
+      "clutch",
+      "team_save",
+      "ultimate",
+      "kill",
+      "multi_kill"
+    ],
+    "preserve_event_context": true,
+    "require_outcome_before_cut": true,
+    "cross_match_balance": true
+  },
+  "music": {
+    "mode": "local_or_supplied_only",
+    "default_mood": "high_energy",
+    "prefer_platform_native_when_publishing": false,
+    "keep_bgm_stem": true,
+    "duck_under_voice_db": -6,
+    "duck_at_impact_db": -3
+  },
+  "captions": {
+    "dialogue": "off",
+    "impact_text": "selective",
+    "title_cards": "optional",
+    "burn_in": false
+  },
+  "effects": {
+    "intensity": "medium",
+    "flash": "restrained",
+    "shake": "light",
+    "freeze_frames": {
+      "min": 2,
+      "max": 4
+    },
+    "slow_motion_ratio": 0.6,
+    "allow_replay": false,
+    "protect_readability": true
+  },
+  "audio": {
+    "preserve_game_impact": true,
+    "preserve_team_comms_when_relevant": true,
+    "sfx_pack": "default",
+    "record_loudness_report": true
+  },
+  "delivery": {
+    "user_receives": [
+      "master",
+      "review_preview"
+    ],
+    "keep_internal_rebuild_package": true,
+    "keep_editable_timeline": true,
+    "keep_source_read_only": true
+  }
+}

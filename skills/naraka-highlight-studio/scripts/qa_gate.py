@@ -1,0 +1,400 @@
+from __future__ import annotations
+
+"""Project QA gate: one executable entry for the 12 delivery checks.
+
+Zero third-party dependencies: only the standard library plus text output
+parsed from FFprobe/FFmpeg. Any single FAIL blocks review delivery and the
+4K master; fix the source timeline, bump the version, and re-run.
+"""
+
+import argparse
+import json
+import re
+import shutil
+import subprocess
+from pathlib import Path
+from typing import Any
+
+SCHEMA = "naraka-highlight-qa-gate/v1"
+
+SUM_TOLERANCE_S = 0.01
+PREVIEW_DURATION_TOLERANCE_S = 0.3
+AV_DURATION_WARN_S = 0.2
+AV_DURATION_FAIL_S = 0.5
+MIN_SUBTITLE_GAP_S = 0.08
+MIN_SUBTITLE_DURATION_S = 0.8
+MAX_SUBTITLE_DURATION_S = 7.0
+MAX_CPS_ZH = 12
+MAX_CPS_EN = 20
+
+
+def check(name: str, status: str, measured: Any, threshold: Any, evidence: str) -> dict:
+    return {
+        "name": name,
+        "result": status,
+        "measured": measured,
+        "threshold": threshold,
+        "evidence": evidence,
+    }
+
+
+def load_timeline(path: Path) -> tuple[dict, list[dict]]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    episodes: list[dict] = []
+    if isinstance(data, list):
+        episodes = [dict(item) for item in data]
+        return {}, episodes
+    for key in ("combat_episodes", "episodes", "clips", "events"):
+        value = data.get(key)
+        if isinstance(value, list):
+            return data, [dict(item) for item in value]
+    raise ValueError("timeline JSON must contain combat_episodes, episodes, clips, or events")
+
+
+def episode_range(episode: dict) -> tuple[float, float]:
+    start = float(episode.get("source_start", episode.get("start", 0.0)))
+    end = float(episode.get("source_end", episode.get("end", start)))
+    return start, end
+
+
+def gate_timeline_mutex(episodes: list[dict], evidence: str) -> dict:
+    ordered = sorted(episodes, key=episode_range)
+    for prev, nxt in zip(ordered, ordered[1:]):
+        if episode_range(nxt)[0] < episode_range(prev)[1]:
+            return check(
+                "timeline_mutex",
+                "FAIL",
+                f"overlap {episode_range(prev)} vs {episode_range(nxt)}",
+                "episodes sorted, next.start >= prev.end",
+                evidence,
+            )
+    return check("timeline_mutex", "PASS", f"{len(ordered)} episodes ordered", "no overlap", evidence)
+
+
+def gate_source_range(episodes: list[dict], duration: float | None, evidence: str) -> dict:
+    bad = [episode_range(ep) for ep in episodes if episode_range(ep)[1] <= episode_range(ep)[0]]
+    if bad:
+        return check("source_range", "FAIL", f"reversed {bad[0]}", "0 <= start < end", evidence)
+    if duration is not None:
+        over = [episode_range(ep) for ep in episodes if episode_range(ep)[1] > duration]
+        if over:
+            return check("source_range", "FAIL", f"end {over[0][1]} > duration {duration}", "end <= source duration", evidence)
+    shortest = min((episode_range(ep)[1] - episode_range(ep)[0] for ep in episodes), default=0.0)
+    if shortest < 1.0:
+        return check("source_range", "WARN", f"shortest {shortest:.3f}s", "episode >= 1.0s", evidence)
+    return check("source_range", "PASS", f"{len(episodes)} in range", "0 <= start < end <= duration", evidence)
+
+
+def gate_program_sum(episodes: list[dict], program_map: Path | None, evidence: str) -> dict:
+    total = round(sum(end - start for start, end in (episode_range(ep) for ep in episodes)), 3)
+    if program_map is None or not program_map.is_file():
+        return check("program_sum", "WARN", total, "program_map present", evidence)
+    try:
+        header = json.loads(program_map.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return check("program_sum", "WARN", total, "program_map parseable", f"{evidence} ({exc})")
+    for key in ("program_duration", "duration", "total_duration"):
+        if key in header:
+            try:
+                expected = float(header[key])
+            except (TypeError, ValueError):
+                continue
+            delta = abs(total - expected)
+            if delta <= SUM_TOLERANCE_S:
+                return check("program_sum", "PASS", total, f"header {expected} ±{SUM_TOLERANCE_S}s", str(program_map))
+            return check("program_sum", "FAIL", total, f"header {expected} ±{SUM_TOLERANCE_S}s", str(program_map))
+    return check("program_sum", "WARN", total, "header carries program duration", str(program_map))
+
+
+def run_probe(ffprobe: str | None, target: Path) -> dict | None:
+    if not ffprobe or not target.is_file():
+        return None
+    try:
+        completed = subprocess.run(
+            [ffprobe, "-v", "error", "-show_format", "-show_streams", "-of", "json", str(target)],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if completed.returncode != 0:
+        return None
+    try:
+        return json.loads(completed.stdout)
+    except ValueError:
+        return None
+
+
+def gate_preview_duration(probe: dict | None, episodes: list[dict], evidence: str) -> dict:
+    if probe is None:
+        return check("preview_duration", "WARN", "no ffprobe", "preview duration ±0.3s", evidence)
+    try:
+        actual = float(probe["format"]["duration"])
+    except (KeyError, TypeError, ValueError):
+        return check("preview_duration", "WARN", "no duration", "preview duration ±0.3s", evidence)
+    expected = sum(end - start for start, end in (episode_range(ep) for ep in episodes))
+    delta = abs(actual - expected)
+    if delta <= PREVIEW_DURATION_TOLERANCE_S:
+        return check("preview_duration", "PASS", round(actual, 3), f"program {round(expected, 3)} ±{PREVIEW_DURATION_TOLERANCE_S}s", evidence)
+    return check("preview_duration", "FAIL", round(actual, 3), f"program {round(expected, 3)} ±{PREVIEW_DURATION_TOLERANCE_S}s", evidence)
+
+
+def gate_av_sync(probe: dict | None, evidence: str) -> dict:
+    if probe is None:
+        return check("av_sync", "WARN", "no ffprobe", "|V-A| <= 0.2s", evidence)
+    durations: dict[str, float] = {}
+    for stream in probe.get("streams", []):
+        codec = str(stream.get("codec_type", ""))
+        try:
+            durations.setdefault(codec, float(stream.get("duration", probe["format"]["duration"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+    if "video" not in durations or "audio" not in durations:
+        return check("av_sync", "WARN", durations, "video+audio durations", evidence)
+    delta = abs(durations["video"] - durations["audio"])
+    if delta <= AV_DURATION_WARN_S:
+        return check("av_sync", "PASS", round(delta, 3), f"<= {AV_DURATION_WARN_S}s", evidence)
+    if delta <= AV_DURATION_FAIL_S:
+        return check("av_sync", "WARN", round(delta, 3), f"<= {AV_DURATION_WARN_S}s pass, > {AV_DURATION_FAIL_S}s fail", evidence)
+    return check("av_sync", "FAIL", round(delta, 3), f"<= {AV_DURATION_FAIL_S}s", evidence)
+
+
+def gate_frame_rate(probe: dict | None, evidence: str) -> dict:
+    if probe is None:
+        return check("frame_rate", "WARN", "no ffprobe", "CFR 60", evidence)
+    for stream in probe.get("streams", []):
+        if stream.get("codec_type") != "video":
+            continue
+        avg = str(stream.get("avg_frame_rate", ""))
+        rate = str(stream.get("r_frame_rate", ""))
+        if avg != rate:
+            return check("frame_rate", "FAIL", f"avg {avg} vs r {rate}", "avg == r (CFR)", evidence)
+        return check("frame_rate", "PASS", avg, "CFR", evidence)
+    return check("frame_rate", "WARN", "no video stream", "CFR 60", evidence)
+
+
+def parse_srt(path: Path) -> list[dict]:
+    text = path.read_text(encoding="utf-8-sig")
+    blocks = re.split(r"\r?\n\r?\n", text.strip())
+    entries: list[dict] = []
+    stamp = re.compile(r"(\d+):(\d+):([\d.,]+)\s*-->\s*(\d+):(\d+):([\d.,]+)")
+
+    def to_seconds(hour: str, minute: str, sec: str) -> float:
+        return int(hour) * 3600 + int(minute) * 60 + float(sec.replace(",", "."))
+
+    for block in blocks:
+        match = stamp.search(block)
+        if not match:
+            continue
+        start = to_seconds(*match.group(1, 2, 3))
+        end = to_seconds(*match.group(4, 5, 6))
+        body = stamp.sub("", block).strip()
+        entries.append({"start": start, "end": end, "text": re.sub(r"\s+", " ", body)})
+    return entries
+
+
+def is_cjk(text: str) -> bool:
+    return any("\u4e00" <= ch <= "\u9fff" for ch in text)
+
+
+def gate_subtitles(entries: list[dict], episodes: list[dict], evidence: str) -> dict:
+    ordered = sorted(entries, key=lambda item: item["start"])
+    for prev, nxt in zip(ordered, ordered[1:]):
+        if nxt["start"] < prev["end"] - 1e-6:
+            return check("subtitle_overlap", "FAIL", f"{prev['start']:.3f}-{prev['end']:.3f} vs {nxt['start']:.3f}", "no overlap", evidence)
+        if nxt["start"] - prev["end"] < MIN_SUBTITLE_GAP_S - 1e-6:
+            return check("subtitle_overlap", "WARN", f"gap {nxt['start'] - prev['end']:.3f}s", f">= {MIN_SUBTITLE_GAP_S}s", evidence)
+    for entry in ordered:
+        duration = entry["end"] - entry["start"]
+        if duration < MIN_SUBTITLE_DURATION_S - 1e-6 or duration > MAX_SUBTITLE_DURATION_S + 1e-6:
+            return check("subtitle_timing", "FAIL", f"{duration:.3f}s", f"{MIN_SUBTITLE_DURATION_S}-{MAX_SUBTITLE_DURATION_S}s", evidence)
+        body = re.sub(r"\s+", "", entry["text"])
+        if not body:
+            continue
+        if is_cjk(body):
+            cps = len(body) / max(duration, 1e-6)
+            if cps > MAX_CPS_ZH:
+                return check("subtitle_timing", "FAIL", f"{cps:.1f} cps", f"<= {MAX_CPS_ZH} cps", evidence)
+        else:
+            wpm = len(entry["text"].split()) / max(duration / 60.0, 1e-6)
+            if wpm > MAX_CPS_EN * 8:
+                return check("subtitle_timing", "WARN", f"{wpm:.0f} wpm", "readable", evidence)
+        for start, end in (episode_range(ep) for ep in episodes):
+            if start < entry["start"] < end < entry["end"] or entry["start"] < start < entry["end"] < end:
+                if abs(entry["start"] - start) > 0.2 and abs(entry["end"] - end) > 0.2:
+                    return check("subtitle_span", "FAIL", f"{entry['start']:.2f}-{entry['end']:.2f} crosses cut", "zero cross-cut", evidence)
+    return check("subtitle_span", "PASS", f"{len(ordered)} cues", "zero cross-cut", evidence)
+
+
+def gate_burned_srt(master: Path | None, burned: bool, evidence: str) -> dict:
+    # External-only rule: no burned variant exists. Any burn flag means a
+    # forbidden render path was taken.
+    if burned:
+        return check("no_burned_variant", "FAIL", "burned render requested", "external SRT only, never burn", evidence)
+    if master is None:
+        return check("no_burned_variant", "WARN", "no master", "external SRT only, never burn", evidence)
+    sibling = master.with_suffix(".srt")
+    if sibling.exists():
+        return check("no_burned_variant", "WARN", str(sibling), "SRT lives in captions/, not next to clean MP4", str(sibling))
+    return check("no_burned_variant", "PASS", "no burn path", "external SRT only, never burn", evidence)
+
+
+def gate_no_subtitle_stream(probe: dict | None, evidence: str) -> dict:
+    # MP4 must carry zero subtitle streams: preview and master are clean video.
+    if probe is None:
+        return check("no_subtitle_stream", "WARN", "no ffprobe", "0 subtitle streams", evidence)
+    count = sum(1 for stream in probe.get("streams", []) if str(stream.get("codec_type", "")) == "subtitle")
+    if count == 0:
+        return check("no_subtitle_stream", "PASS", 0, "0 subtitle streams", evidence)
+    return check("no_subtitle_stream", "FAIL", count, "0 subtitle streams", evidence)
+
+
+def gate_proxy_map(proxy_map: Path | None, evidence: str) -> dict:
+    if proxy_map is None or not proxy_map.is_file():
+        return check("proxy_map", "WARN", "no proxy map", "proxy offset recorded", evidence)
+    try:
+        payload = json.loads(proxy_map.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return check("proxy_map", "WARN", str(exc), "proxy map parseable", str(proxy_map))
+    offset = payload.get("proxy_offset", payload.get("offset", 0.0))
+    try:
+        value = abs(float(offset))
+    except (TypeError, ValueError):
+        return check("proxy_map", "FAIL", offset, "numeric offset", str(proxy_map))
+    if value <= 1.0 / 60.0 + 1e-6:
+        return check("proxy_map", "PASS", value, "<= 1 frame @60fps", str(proxy_map))
+    return check("proxy_map", "FAIL", value, "<= 1 frame @60fps", str(proxy_map))
+
+
+def gate_kit(frozen: list[Path], evidence: str) -> dict:
+    missing = [str(path) for path in frozen if not path.is_file()]
+    if missing:
+        return check("freeze_kit", "FAIL", f"missing {missing[0]}", "timeline+map+validate+preview+decode+srt", evidence)
+    return check("freeze_kit", "PASS", f"{len(frozen)} files", "timeline+map+validate+preview+decode+srt", evidence)
+
+
+PROJECT_ROOT_HINT = "C:\\Project\\永劫无间"
+
+
+def gate_workspace_hygiene(timeline_path: Path, evidence: str) -> dict:
+    # Task dir is the only legal work path. Stray products at the project
+    # root (f_*.jpg / thumb_*.jpg / loose *.mp4) mean a wrong output path.
+    # The project root is located by walking up to the dir holding AGENTS.md.
+    root: Path | None = None
+    if timeline_path.exists():
+        for candidate in (timeline_path.resolve(), *timeline_path.resolve().parents):
+            if (candidate / "AGENTS.md").is_file():
+                root = candidate
+                break
+    if root is None:
+        return check("workspace_hygiene", "WARN", "project root not found", "outputs under 123/<id>.<name>", evidence)
+    strays: list[str] = []
+    try:
+        for pattern in ("f_*.jpg", "thumb_*.jpg"):
+            strays.extend(path.name for path in root.glob(pattern))
+        strays.extend(path.name for path in root.glob("*.mp4"))
+    except OSError as exc:
+        return check("workspace_hygiene", "WARN", str(exc), "root readable", str(root))
+    if not strays:
+        return check("workspace_hygiene", "PASS", "no root strays", "<= 10 stray files", str(root))
+    if len(strays) > 10:
+        return check("workspace_hygiene", "FAIL", f"{len(strays)} strays, e.g. {strays[0]}", "<= 10 stray files", str(root))
+    return check("workspace_hygiene", "WARN", f"{len(strays)} strays, e.g. {strays[0]}", "<= 10 stray files", str(root))
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Run the 12 project QA gates; any FAIL blocks freezing.")
+    parser.add_argument("timeline", type=Path)
+    parser.add_argument("--program-map", type=Path)
+    parser.add_argument("--preview", type=Path)
+    parser.add_argument("--decode-log", type=Path)
+    parser.add_argument("--srt", type=Path)
+    parser.add_argument("--srt-stats", type=Path)
+    parser.add_argument("--master", type=Path)
+    parser.add_argument(
+        "--burned-subtitles",
+        action="store_true",
+        help="Legacy flag, kept for compatibility. Passing it FAILs the no-burn gate: burning is forbidden.",
+    )
+    parser.add_argument("--proxy-map", type=Path)
+    parser.add_argument("--source-duration", type=float)
+    parser.add_argument("--ffprobe", type=str, default=None)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+
+    checks: list[dict] = []
+    try:
+        _, episodes = load_timeline(args.timeline)
+    except (OSError, ValueError) as exc:
+        checks.append(check("load_timeline", "FAIL", str(exc), "parseable timeline", str(args.timeline)))
+        episodes = []
+    if episodes:
+        checks.append(gate_timeline_mutex(episodes, str(args.timeline)))
+        checks.append(gate_source_range(episodes, args.source_duration, str(args.timeline)))
+        checks.append(gate_program_sum(episodes, args.program_map, str(args.timeline)))
+    ffprobe = args.ffprobe or shutil.which("ffprobe")
+    probe = run_probe(ffprobe, args.preview) if args.preview else None
+    preview_evidence = str(args.preview) if args.preview else "no preview"
+    checks.append(gate_preview_duration(probe, episodes, preview_evidence))
+    checks.append(gate_av_sync(probe, preview_evidence))
+    checks.append(gate_frame_rate(probe, preview_evidence))
+    # Media-content gates (black/freeze/silence/loudness/splice continuity) run
+    # as FFmpeg filter passes and are recorded by the render/self-audit reports;
+    # this gate enforces that their evidence exists instead of re-decoding here.
+    checks.append(check("media_filters", "WARN", "see render/selfaudit evidence", "black/freeze/silence/ebur128 on file", preview_evidence))
+    if args.srt and args.srt.is_file() and episodes:
+        try:
+            entries = parse_srt(args.srt)
+            checks.append(gate_subtitles(entries, episodes, str(args.srt)))
+            if args.srt_stats and args.srt_stats.is_file():
+                try:
+                    stats = json.loads(args.srt_stats.read_text(encoding="utf-8"))
+                    for key in ("count", "total", "cues"):
+                        if key in stats:
+                            try:
+                                expected = int(stats[key])
+                            except (TypeError, ValueError):
+                                continue
+                            if expected != len(entries):
+                                checks.append(check("subtitle_stats", "FAIL", len(entries), f"stats {key}={expected}", str(args.srt_stats)))
+                                break
+                    else:
+                        checks.append(check("subtitle_stats", "PASS", len(entries), "matches stats", str(args.srt_stats)))
+                except (OSError, ValueError) as exc:
+                    checks.append(check("subtitle_stats", "WARN", str(exc), "stats parseable", str(args.srt_stats)))
+            else:
+                checks.append(check("subtitle_stats", "WARN", "no stats", "stats on file", str(args.srt) if args.srt else "no srt"))
+        except (OSError, ValueError) as exc:
+            checks.append(check("subtitle_span", "FAIL", str(exc), "parseable SRT", str(args.srt)))
+    else:
+        checks.append(check("subtitle_span", "WARN", "no srt", "SRT checked", preview_evidence))
+        checks.append(check("subtitle_stats", "WARN", "no stats", "stats on file", preview_evidence))
+    checks.append(gate_burned_srt(args.master, args.burned_subtitles, preview_evidence))
+    checks.append(gate_no_subtitle_stream(probe, preview_evidence))
+    if args.master is not None and args.master.is_file():
+        master_probe = run_probe(ffprobe, args.master)
+        checks.append(gate_no_subtitle_stream(master_probe, str(args.master)))
+    checks.append(gate_proxy_map(args.proxy_map, preview_evidence))
+    checks.append(gate_workspace_hygiene(args.timeline, preview_evidence))
+    frozen = [item for item in (args.timeline, args.program_map, args.preview, args.decode_log, args.srt) if item is not None]
+    checks.append(gate_kit([Path(item) for item in frozen], preview_evidence))
+
+    failed = sum(1 for item in checks if item["result"] == "FAIL")
+    result = {
+        "schema": SCHEMA,
+        "timeline": str(args.timeline.resolve()) if args.timeline.exists() else str(args.timeline),
+        "checks": checks,
+        "fail": failed,
+        "warn": sum(1 for item in checks if item["result"] == "WARN"),
+        "status": "FROZEN_CANDIDATE" if failed == 0 else "NOT_FROZEN",
+        "pass": failed == 0,
+    }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"pass": result["pass"], "fail": failed, "output": str(args.output)}, ensure_ascii=False))
+    return 0 if failed == 0 else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

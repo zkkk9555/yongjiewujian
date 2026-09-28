@@ -1,0 +1,4 @@
+interface:
+  display_name: "Naraka Highlight Studio"
+  short_description: "完整战斗粗剪与高燃成片"
+  default_prompt: "Use $naraka-highlight-studio for a Naraka video; choose complete_combat_roughcut when every fight must remain intact from engagement through outcome, or high_energy for a finished montage."

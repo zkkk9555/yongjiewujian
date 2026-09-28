@@ -1,0 +1,6 @@
+This directory is intentionally empty. The .gitkeep file exists so that git
+tracks the directory itself and the structure survives a clone or a restore.
+
+The project does not auto-populate it: assets/asset_manifest.json is the single
+index, and entries are added deliberately (see assets/README.md on provenance
+requirements for BGM / SFX / overlays / fonts).

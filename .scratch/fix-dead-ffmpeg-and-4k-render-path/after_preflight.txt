@@ -1,0 +1,19 @@
+﻿ProjectRoot: C:\Project\永劫无间
+READ-ONLY preflight. Installs nothing, creates no environment, downloads nothing.
+
+[BLOCKER] python interpreter: EXISTS but CANNOT START: python.exe : No Python at '"%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\pyth | venv base interpreter is MISSING (was): %USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python :: C:\Project\永劫无间\.video-tools\venv\Scripts\python.exe
+[WARN] auto-editor CLI: skipped: no runnable python
+[WARN] PySceneDetect CLI: skipped: no runnable python
+[WARN] package versions: unavailable: no runnable python
+[PASS] faster-whisper model cache: C:\Project\永劫无间\.video-tools\models\models--Systran--faster-whisper-large-v3
+[PASS] LosslessCut: C:\Project\永劫无间\.video-tools\LosslessCut\LosslessCut.exe
+[PASS] FFmpeg resolved: C:\Project\永劫无间\.video-tools\LosslessCut\resources\ffmpeg.exe :: ffmpeg version n8.0-23-gd1f31a829d-20251022 Copyright (c) 2000-2025 the FFmpeg developers
+[PASS] FFprobe resolved: C:\Project\永劫无间\.video-tools\LosslessCut\resources\ffprobe.exe :: ffprobe version n8.0-23-gd1f31a829d-20251022 Copyright (c) 2007-2025 the FFmpeg developers
+
+SUMMARY: ok=4 warn=3 blocker=1
+BLOCKERS:
+  - python interpreter :: EXISTS but CANNOT START: python.exe : No Python at '"%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\pyth | venv base interpreter is MISSING (was): %USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python :: C:\Project\永劫无间\.video-tools\venv\Scripts\python.exe
+
+A BLOCKER means a roughcut task cannot be trusted to run correctly.
+Record it in the task directory. Do NOT install or rebuild anything
+without explicit user authorization (AGENTS.md section 3).
