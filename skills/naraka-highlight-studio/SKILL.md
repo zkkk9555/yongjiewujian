@@ -70,13 +70,15 @@ These helpers do not replace visual review or event judgment; they make the same
 8. Keep dialogue subtitles off for pure gameplay by default. Use a separate impact-text layer for selected parries, kills, ultimates, and clutch moments.
 9. Render a review preview, run quality gates, and correct the source timeline before producing the final master.
 10. Preserve a rebuildable internal timeline, stems, markers, cache, and style feedback even when the user only receives the final MP4.
-11. **Once the 4K master is delivered and passes `verify_master.sh`, run the post-master cleanup.** This is a standing step of the delivery chain, not an extra thing to ask about: the user saying "output the 4K master" authorises the whole chain, ending with the cleanup.
+11. **A 4K master lives in exactly one place: `E:\Cujian导出\<source filename> cujian.mp4`.** Render straight to the delivery folder, never into the task's `deliverables\`. The task directory holds regenerable working files and text evidence only; it must not keep a long-term copy of the master. Then verify that E-drive file with `verify_master.sh` and run the post-master cleanup. This is a standing step of the delivery chain, not an extra thing to ask about: the user saying "output the 4K master" authorises the whole chain, ending with the cleanup.
 
     ```powershell
     & 'C:\Project\永劫无间\scripts\cleanup_after_master.ps1' -TaskDir 'C:\Project\永劫无间\123\<编号>.<素材文件名>'
     ```
 
-    It deletes only regenerable weight — `preview\`, `cache\`, `shots\`, `audio\` — and keeps the task directory itself, `timeline\`, `reports\`, `analysis\`, `deliverables\`, `captions\`, and every root-level file. On task 849 that is 3.38 GB out of 3.39 GB reclaimed while the ~10 MB of "why each cut landed there" evidence survives. It refuses to run when no master exists. See `references/deliverables-and-qa.md` → Post-master cleanup.
+    **Delivery gate first:** it refuses to delete anything unless it finds a non-empty `<material>*.mp4` in the delivery folder. No master delivered means `[BLOCKED]` and zero bytes touched — losing a master costs far more than keeping a few GB.
+
+    Once the gate passes it deletes only regenerable weight — `preview\`, `cache\`, `shots\`, `audio\` — plus any leftover master copy in `deliverables\` (the `.mp4` files only; the directory stays), and keeps the task directory itself, `timeline\`, `reports\`, `analysis\`, `captions\`, and every root-level file. On task 849 that is 3.38 GB out of 3.39 GB reclaimed while the ~10 MB of "why each cut landed there" evidence survives. See `references/deliverables-and-qa.md` → Master ownership and Post-master cleanup.
 
 For `complete_combat_roughcut`, the review preview is the primary deliverable of the first pass. It must be checked for three things before any 4K export: every selected fight is complete, non-combat material is removed, and the transition to the next fight occurs only after a clear outcome and short recovery.
 

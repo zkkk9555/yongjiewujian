@@ -45,7 +45,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$TaskDir,
-    [string]$Master,
+    [string]$DeliveryRoot = 'E:\Cujian导出',
     [switch]$WhatIf
 )
 
@@ -76,30 +76,51 @@ if ((Split-Path -Parent $TaskDir) -ne $jobsResolved) {
     Die "task dir must sit directly under ${jobsRoot} (got: $TaskDir)"
 }
 
-# A master must exist before we delete anything.  If the user has not delivered
-# yet, this step must be a no-op rather than a destructive surprise.
-if (-not $Master) {
-    $dl = Join-Path $TaskDir 'deliverables'
-    $found = @(Get-ChildItem -LiteralPath $dl -File -Filter '*.mp4' -ErrorAction SilentlyContinue |
-               Where-Object { $_.Length -gt 0 })
-    if ($found.Count -eq 0) {
-        Say "[SKIP] no master in ${dl}\ -- nothing delivered yet, nothing to clean."
-        Say "       (This is expected during roughcut review; this step runs after 4K delivery.)"
-        exit 0
+# ---------------------------------------------------------------------------
+# Delivery gate.  E:\Cujian导出 is the ONE authoritative home of a 4K master.
+# The task directory must never keep one long-term: that is what left 849 / 854 /
+# 859 each holding a duplicate 1.6-2.6 GB copy.  So before deleting anything we
+# prove the master has actually landed in the delivery folder.  Refuse otherwise:
+# losing a master costs far more than keeping a few GB.
+# ---------------------------------------------------------------------------
+
+$leaf       = Split-Path -Leaf $TaskDir
+$material   = $leaf -replace '^\d+\.', ''          # 15.855xxx -> 855xxx
+$localMasterDir = Join-Path $TaskDir 'deliverables'
+$localMasters   = @(Get-ChildItem -LiteralPath $localMasterDir -File -Filter '*.mp4' -Force -ErrorAction SilentlyContinue)
+
+$delivered = @()
+if (Test-Path -LiteralPath $DeliveryRoot -PathType Container) {
+    $delivered = @(Get-ChildItem -LiteralPath $DeliveryRoot -File -Filter '*.mp4' -Force -ErrorAction SilentlyContinue |
+                   Where-Object { $_.Name -like "$material*" -and $_.Length -gt 0 })
+}
+
+Say "task      : $TaskDir"
+Say "material  : $material"
+Say "delivery  : $DeliveryRoot"
+Say ''
+
+if ($delivered.Count -eq 0) {
+    Say "[BLOCKED] no delivered master found for this material."
+    Say "          Looked for: ${DeliveryRoot}\$material*.mp4 (non-empty)"
+    if ($localMasters.Count -gt 0) {
+        Say "          The task dir still holds $($localMasters.Count) local master file(s), e.g.:"
+        foreach ($m in $localMasters) { Say ("            {0}  ({1:N0} B)" -f $m.FullName, $m.Length) }
+        Say '          MOVE it to the delivery folder first, then re-run. Nothing was deleted.'
+    } else {
+        Say '          Nothing was deleted, and nothing needed deleting yet.'
+        Say '          (This is the normal state during roughcut review.)'
     }
-    $Master = $found[0].FullName
-    Say "master: $Master"
+    exit 1
 }
-if (-not (Test-Path -LiteralPath $Master -PathType Leaf)) {
-    Die "master not found: $Master"
+
+foreach ($d in $delivered) {
+    Say "[DELIVERED] {0}  ({1:N0} B)" -f $d.FullName, $d.Length
 }
-$Master = (Resolve-Path -LiteralPath $Master).Path
-if ((Get-Item -LiteralPath $Master).Length -le 0) {
-    Die "master is zero bytes: $Master"
+if ($localMasters.Count -gt 0) {
+    Say "[DUPLICATE] $($localMasters.Count) local master copy/copies found in deliverables\ -- they will be removed so E: stays the only copy."
 }
-if (-not $Master.StartsWith($TaskDir, [System.StringComparison]::OrdinalIgnoreCase)) {
-    Die "master must live inside the task dir: $Master"
-}
+Say ''
 
 # --- build the plan ---------------------------------------------------------
 
@@ -122,6 +143,19 @@ foreach ($name in $Disposable) {
     $totalBytes += $bytes
 }
 
+# The local master copy is NOT evidence -- E:\Cujian导出 is authoritative and the
+# delivery gate above already proved the file landed there.  Leaving it behind is
+# what accumulated ~6.2 GB of duplicates across 849 / 854 / 859.
+if ($localMasters.Count -gt 0) {
+    $mBytes = [int64]0
+    foreach ($m in $localMasters) { $mBytes += $m.Length }
+    [void]$plan.Add([pscustomobject]@{
+        Dir = 'deliverables\*.mp4'; Path = $localMasterDir
+        Files = $localMasters.Count; Bytes = $mBytes
+    })
+    $totalBytes += $mBytes
+}
+
 if ($plan.Count -eq 0) {
     Say "[SKIP] nothing disposable left in $TaskDir (already cleaned)."
     exit 0
@@ -140,7 +174,8 @@ foreach ($p in $plan) {
 Say ("  {0,-8} {1,10:N1} MB  <- 将回收" -f '合计', ($totalBytes / 1MB))
 Say ("  任务目录现体积 {0:N2} GB -> 清理后约 {1:N2} GB" -f ($taskBytes / 1GB), (($taskBytes - $totalBytes) / 1GB))
 Say ''
-Say '保留：目录本身（编号靠它）、timeline\、reports\、analysis\、deliverables\、captions\ 及所有根级文件'
+Say '保留：目录本身（编号靠它）、timeline\、reports\、analysis\、captions\ 及所有根级文件'
+Say '删除：preview\ cache\ shots\ audio\（可再生）+ deliverables\ 里的成片副本（E 盘已有正本）'
 Say ''
 
 if ($WhatIf) {
@@ -165,8 +200,11 @@ $kept = @(Get-ChildItem -LiteralPath $TaskDir -Directory -Force |
 $lines = New-Object System.Collections.ArrayList
 [void]$lines.Add('# 成片交付后收尾清理（cleanup_after_master.ps1 自动执行）')
 [void]$lines.Add('')
-[void]$lines.Add(('- 触发点：**4K 成片已交付**（本轮固定步骤，不需要人工额外发起）。master：`{0}`' -f $Master))
-[void]$lines.Add(('- 成片体积：{0:N0} B' -f (Get-Item -LiteralPath $Master).Length))
+[void]$lines.Add(('- 触发点：**4K 成片已交付到 E 盘交付目录**（本轮固定步骤，不需要人工额外发起）。'))
+foreach ($d in $delivered) {
+    [void]$lines.Add(('- 交付正本：`{0}`（{1:N0} B）—— 成片的唯一归属' -f $d.FullName, $d.Length))
+}
+[void]$lines.Add(('- 成片体积：{0:N0} B' -f $delivered[0].Length))
 [void]$lines.Add('- 依据：`AGENTS.md §7` 生命周期清理；849 `reports\cleanup_log_v4.md §5` 早已登记「可再生大文件成片即删」但从未自动化，本脚本即其落地。')
 [void]$lines.Add('')
 [void]$lines.Add('## 一、拟删清单与删前体积')
@@ -186,7 +224,8 @@ foreach ($p in $plan) {
 [void]$lines.Add(('- 保留的子目录：{0}' -f $(if ($kept.Count) { ($kept -join '、') } else { '（无）' })))
 [void]$lines.Add('- `timeline\`：剪辑时间线与节目映射——「为什么这么剪」的依据')
 [void]$lines.Add('- `reports\`：审计、验收、门禁、逐点裁决记录——同上是依据')
-[void]$lines.Add('- `deliverables\` / `captions\`：成片与外挂字幕本体')
+[void]$lines.Add('- `captions\`：外挂字幕本体（成片已落 E 盘，字幕随之交付，不在本目录重复保留）')
+[void]$lines.Add('- `deliverables\`：**不保留成片**。成片的唯一归属是 E 盘交付目录，本目录只放记录与成片副本，副本在本轮删除')
 [void]$lines.Add('- 根级散文件：一律不动')
 [void]$lines.Add('')
 [void]$lines.Add('## 三、删后验证')
@@ -194,7 +233,7 @@ foreach ($p in $plan) {
 [void]$lines.Add('- （执行后由脚本追加）')
 [void]$lines.Add('')
 [void]$lines.Add('## 四、成片对账')
-[void]$lines.Add(('- 成片绝对路径：{0}' -f $Master))
+[void]$lines.Add(('- 成片绝对路径：{0}（E 盘交付目录，成片唯一归属）' -f $delivered[0].FullName))
 [void]$lines.Add('- 是否从原始素材重新渲染：是（`seg_render_master.sh` 按源时间线从源片重渲，未从预览放大）')
 [void]$lines.Add('- 原始素材：只读未动（本脚本只删任务目录内的派生文件，不触碰 `E:\OBS` / `E:\PR导出`）')
 [void]$lines.Add('')
@@ -207,8 +246,18 @@ Say "已写清理日志：$logPath"
 $failed = New-Object System.Collections.ArrayList
 foreach ($p in $plan) {
     try {
-        Remove-Item -LiteralPath $p.Path -Recurse -Force -ErrorAction Stop
-        Say "  deleted  $($p.Dir)\  ($([math]::Round($p.Bytes / 1MB, 1)) MB)"
+        if ($p.Dir -eq 'deliverables\*.mp4') {
+            # Delete only the master FILES, never the deliverables\ directory
+            # itself -- anything else recorded there must survive.
+            foreach ($m in $localMasters) {
+                if ($m.FullName.StartsWith($TaskDir + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+                    Remove-Item -LiteralPath $m.FullName -Force -ErrorAction Stop
+                }
+            }
+        } else {
+            Remove-Item -LiteralPath $p.Path -Recurse -Force -ErrorAction Stop
+        }
+        Say "  deleted  $($p.Dir)  ($([math]::Round($p.Bytes / 1MB, 1)) MB)"
     } catch {
         [void]$failed.Add("$($p.Dir): $($_.Exception.Message)")
         Say "  FAILED   $($p.Dir): $($_.Exception.Message)"
@@ -226,7 +275,11 @@ $stillThere = @($plan | Where-Object { Test-Path -LiteralPath $_.Path })
 $verify = New-Object System.Collections.ArrayList
 [void]$verify.Add(('- 实际清理后任务目录体积：{0:N2} GB（清理前 {1:N2} GB）' -f ($afterBytes / 1GB), ($taskBytes / 1GB)))
 [void]$verify.Add(('- 目标目录残留：{0}' -f $(if ($stillThere.Count -eq 0) { '无，全部已删' } else { ($stillThere.Dir -join '、') })))
-[void]$verify.Add(('- 成片仍在：{0}（{1:N0} B）' -f $(if (Test-Path -LiteralPath $Master) { '是' } else { '否' }), (Get-Item -LiteralPath $Master).Length))
+[void]$verify.Add(('- 交付正本仍在 E 盘：{0}（{1:N0} B）' -f $(if (Test-Path -LiteralPath $delivered[0].FullName) { '是' } else { '否 —— 成片丢失，严重！' }), $delivered[0].Length))
+if ($localMasters.Count -gt 0) {
+    $leftOver = @(Get-ChildItem -LiteralPath $localMasterDir -File -Filter '*.mp4' -Force -ErrorAction SilentlyContinue)
+    [void]$verify.Add(('- 任务目录内成片副本已清空：{0}（原 {1} 个）' -f $(if ($leftOver.Count -eq 0) { '是' } else { '否' }), $localMasters.Count))
+}
 [void]$verify.Add(('- 保留子目录完好：{0}' -f $(if ($kept.Count) { '是（' + ($kept -join '、') + '）' } else { 'n/a' })))
 [void]$verify.Add(('- 源盘未触碰：本脚本只删任务目录内派生文件' ))
 [void]$verify.Add('')

@@ -1,4 +1,4 @@
-<#
+﻿<#
     check_video_environment.ps1  --  READ-ONLY preflight for roughcut tasks.
 
     Verdicts are based on what actually RUNS, not on what merely EXISTS on disk.
@@ -295,7 +295,13 @@ foreach ($d in (Get-ChildItem -LiteralPath $ParentRoot -Directory -Force -ErrorA
     }
 }
 if ($strays.Count -gt 0) {
-    Add-Result 'WARN' 'stray dirs beside project' ("these directories sit next to the project root and are not the project; the workflow must never write here: " + ($strays -join ' | ') + ' -- inspect for a mojibake path before deleting')
+    # BLOCKER, not WARN.  This recurred repeatedly as a WARN and was ignored every
+    # time, so a stray directory kept reappearing at the project root's parent.
+    # Almost always it is a mojibake path: a .ps1 saved without a UTF-8 BOM makes
+    # PowerShell 5.1 decode the Chinese project path as ANSI, and the whole output
+    # tree lands next to the real project instead of inside it.
+    Add-Result 'BLOCKER' 'stray dirs beside project' ("STOP: something wrote outside the sandbox. Directories that sit next to the project root and are not the project: " + ($strays -join ' | '))
+    Add-Result 'NOTE' 'stray dirs beside project' "do NOT delete them blindly. Inspect first (a mojibake name means a script was run without a UTF-8 BOM). Then run: & 'C:\Project\永劫无间\scripts\sanitize_stray_dirs.ps1' -WhatIf   (drop -WhatIf to actually remove)"
 } else {
     Add-Result 'PASS' 'no stray dirs beside project' ("{0} contains only the project" -f $ParentRoot)
 }

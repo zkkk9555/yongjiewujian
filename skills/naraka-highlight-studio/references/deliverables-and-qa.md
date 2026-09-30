@@ -84,24 +84,63 @@ OTIO / Premiere XML / markers 落盘后随冻结版保留一版，旧版与时�
 - 触发器（事件绑定，不是新规则）：渲染员在 `preview_build_vN.md` 落盘同时检查并执行旧预览清理；修线员在 `merge_decision_vN.md` 确认段冻结同时列出本段可删散帧；指挥在台账回收行确认清理已记 `cleanup_log`，未记即视为该路未完工。
 - 每次删除仍记 `reports\cleanup_log_vN.md`（无 log 的删除视为违规）；只删本任务目录内派生文件，绝不碰源片、`.video-tools\`、其他任务目录、`123\workflow_upgrade\`。
 
-### Post-master cleanup（成片交付后的固定步骤，**不是可选项**）
+### Master ownership（成片归属：E 盘是唯一归属）
 
-用户说「输出 4K 成片」= 授权整条交付链。**成片一旦落盘并通过验收，本步骤自动执行，不额外问用户、不需要用户手动发起。**
+**4K 成片的唯一归属是 `E:\Cujian导出\<源文件名> cujian.mp4`。**
+任务目录**不得长期持有成片**——它只承载可再生的过程物与文本证据。
 
-一条命令：
+出 4K 的顺序（不可颠倒）：
 
-```powershell
-& 'C:\Project\永劫无间\scripts\cleanup_after_master.ps1' -TaskDir 'C:\Project\永劫无间\123\<编号>.<素材名>'
+```text
+1. 渲 4K 到 E:\Cujian导出\<源文件名> cujian.mp4     <- 直接渲到交付目录，不进任务目录
+2. verify_master.sh 验收 E 盘那一份
+3. cleanup_after_master.ps1 收尾（自动）
 ```
 
-- **删**：`preview\`、`cache\`、`shots\`、`audio\` —— 全部可由源素材重新生成，不是证据
-- **留**：任务目录本身（`123\README.md` 的取号规则读它，删掉会导致编号复用）、`timeline\`、`reports\`、`analysis\`、`deliverables\`、`captions\`、所有根级文件
-- **为什么留目录**：目录里真正值钱的是约 10 MB 的时间线与审计记录（"这段为什么留、那段为什么删、谁核过"），而 849 实测 3.39 GB 里有 3.38 GB 是可再生的。删重量、留证据，目录壳留着给编号用。
-- **护栏**（脚本自带，缺一即拒）：`deliverables\` 里没有非空成片 → 只报 SKIP 不动手；任务目录不在 `123\` 直接子级 → 拒绝；待删路径解析后不在任务目录内 → 拒绝；先写 `reports\cleanup_log_after_master.md` 再删，无 log 的删除视为违规。
-- **幂等**：已清过再跑一次只会报 SKIP。
+> 2026-09-30 立。此前成片长期留在 `deliverables\`，849 / 854 / 859 各自在任务目录与 E 盘各存一份，
+> **重复约 6.2 GB**；对外报路径时报的是任务目录路径，被判为"输出错目录"。两条是同一个根因。
 
-> 历史：849 的 `reports\cleanup_log_v4.md §5` 早就登记了「可再生大文件成片即删」，但从来没有自动化，所以用户只能整目录手删，顺带把审计记录一起删掉。本节即那条登记的落地。
+### Post-master cleanup（成片交付后的固定步骤，**不是可选项**）
 
+用户说「输出 4K 成片」= 授权整条交付链。**成片一旦落到 E 盘并通过验收，本步骤自动执行，
+不额外问用户、不需要用户手动发起。**
+
+```powershell
+& 'C:\Project\永劫无间\scripts\cleanup_after_master.ps1' -TaskDir 'C:\Project\永劫无间\123\<编号>.<素材名去扩展名>'
+```
+
+**交付闸门（先证明成片已落地，再删任何东西）**：脚本先在 `E:\Cujian导出\` 找
+`<素材名>*.mp4`（非空）。**找不到或文件为 0 字节 -> 拒绝删除、一个字节都不删**，报 `[BLOCKED]`
+并列出任务目录里现有的成片副本。这是数据丢失护栏，**优先级高于省磁盘**。
+
+通过闸门后：
+
+- **删**：`preview\`、`cache\`、`shots\`、`audio\`（可由源素材再生），
+  以及 `deliverables\*.mp4` 的**成片副本**（只删 mp4 文件，`deliverables\` 目录本身保留）
+- **留**：任务目录本身（取号规则读它，删掉会导致编号复用）、`timeline\`、`reports\`、
+  `analysis\`、`captions\`、所有根级文件
+- **为什么留目录**：真正值钱的是约 10 MB 的时间线与审计记录（"这段为什么留、那段为什么删、谁核过"），
+  而 849 实测 3.39 GB 里有 3.38 GB 是可再生的。删重量、留证据、留目录壳。
+- **护栏**（脚本自带，缺一即拒）：E 盘无正本 -> 拒绝；任务目录不在 `123\` 直接子级 -> 拒绝；
+  待删路径解析后不在任务目录内 -> 拒绝；先写 `reports\cleanup_log_after_master.md` 再删
+  （无 log 的删除视为违规）
+- **幂等**：已清过再跑一次只会报 SKIP
+
+> 历史：849 的 `reports\cleanup_log_v4.md §5` 早就登记了「可再生大文件成片即删」，但从未自动化，
+> 用户只能整目录手删，顺带把审计记录一起删掉。本节即那条登记的落地。
+
+### Stray directory gate（项目旁的野目录是 BLOCKER）
+
+预检 `check_video_environment.ps1` 会检查项目根的**上一级目录**是否只含项目本身。
+发现任何别的目录即报 `[BLOCKER] stray dirs beside project`，**退出码 2，停止开工**。
+
+成因几乎总是路径乱码：`.ps1` 存成 UTF-8 无 BOM -> PowerShell 5.1 按 ANSI 读源码 ->
+中文项目路径读成 GBK 乱码 -> 整棵输出树被建到 `C:\Project\<乱码名>\` 下。
+
+处置：确认无用后 `& 'C:\Project\永劫无间\scripts\sanitize_stray_dirs.ps1' -Remove`
+（默认 dry-run，加 `-Remove` 才真删）。**删目录属破坏性动作，必须由人确认。**
+
+> 这条曾是 WARN，被反复忽略，乱码目录持续复发（2026-09-30 升级为 BLOCKER）。
 ### Final wrap（成片后收尾）
 
 保留冻结包 + 证据包：`deliverables\<源文件名> cujian.mp4`（一份，干净画面，禁烧录禁内嵌字幕流）、冻结三件套 vF（含无版本号复制若存在）、冻结版外挂字幕 SRT + stats（住 `captions\` 异目录）、转写源四件、冻结版预览一版 + decode log、全部 `selfaudit/accept/reverify/workflow_notes/dispatch_ledger/cleanup_log`、探测 + 场景 + 音频活动、联系表、`cache\*.py`。删除其余非冻结预览/字幕/时间线、散帧与稀疏图、`audio_16k.wav`（可再生，用户明确要留 stems 除外并注明）、过程审计中间件与渲染中间件。`deliverables\` 成片后只留成片一份，预览不住 `deliverables\`；旧 delivery 文件要么删除要么在 cleanup_log 注明去向，终版统一对账。不出任何烧录版；字幕只以外挂 SRT 交付。
