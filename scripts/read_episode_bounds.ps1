@@ -20,9 +20,29 @@
         powershell -NoProfile -ExecutionPolicy Bypass -File read_episode_bounds.ps1 <timeline.json>
 
     Output (exit 0):
-        N=<episode count>
-        S=<source_start> E=<source_end>      (one line per episode, in timeline order)
-        PROGRAM=<sum of (end - start)>
+        NEPISODES=<episode count>
+        N=<cut-segment count>                 (N >= NEPISODES: holes split an episode)
+        S=<source_start> E=<source_end>       (one line per cut segment, in timeline order)
+        PROGRAM=<sum of (end - start), holes deducted>
+
+    In-segment holes
+    ----------------
+    A combat episode may declare `excluded_inside` -- pauses punched out of the
+    middle of one fight (a loot panel, a menu, a dead stop).  The spec makes
+    leaving one un-excavated a delivery-blocking violation, and the QA gate
+    deducts them, so this reader must too or the 4K master and the gate would
+    disagree by exactly the excavated seconds.
+
+    Each hole splits its episode into several contiguous cut segments, all
+    emitted in order.  This script used to emit one S=/E= line per episode and
+    PROGRAM = sum(end - start), which made holes structurally impossible to
+    honour: the 4K master would keep the pauses AND fail verify_master.sh's
+    duration check.  seg_render_master.sh needs no change -- it already cuts
+    whatever S=/E= pairs it is given and concatenates them.
+
+    This is the same rule as episode_geometry.py; that module is the Python
+    side of one formula, not a second definition.  scripts/test_insegment_holes.sh
+    runs both against one fixture and fails if they ever diverge.
 
     Exit 1 with a [FAIL] line if the file is missing, unreadable, not JSON, or
     holds no episodes.  Exit 2 on argument errors.
@@ -94,11 +114,82 @@ foreach ($ep in $episodes) {
         [Console]::Error.WriteLine(("[FAIL] episode #{0} ({1}) has source_end {2} <= source_start {3}; refusing to render a negative-length segment" -f $i, $ep.id, $e, $s))
         exit 1
     }
-    [void]$lines.Add(('S={0} E={1}' -f $s, $e))
-    $total += ($e - $s)
+
+    # --- collect and validate this episode's in-segment holes -----------------
+    # Holes are carried as PSCustomObject, never as a bare @(start, end) pair.
+    # A PowerShell pipeline unrolls a collection whose element IS an array, so a
+    # list of pairs piped into Sort-Object arrives as loose scalars: one hole
+    # becomes two, $h[1] is $null, and the merge silently emits a duplicate cut
+    # segment.  That produced PROGRAM=1228.5 instead of 1090.5 on task 861.
+    # Objects survive the pipeline intact, so use objects.
+    $holes = New-Object System.Collections.ArrayList
+    if ($null -ne $ep.PSObject.Properties['excluded_inside'] -and $null -ne $ep.excluded_inside) {
+        foreach ($h in @($ep.excluded_inside)) {
+            if ($null -eq $h -or $null -eq $h.PSObject.Properties['start'] -or $null -eq $h.PSObject.Properties['end']) {
+                [Console]::Error.WriteLine(("[FAIL] episode #{0} ({1}) has a malformed excluded_inside entry; each hole needs start and end" -f $i, $ep.id))
+                exit 1
+            }
+            $hs = [double]$h.start
+            $he = [double]$h.end
+            if ($he -le $hs) {
+                [Console]::Error.WriteLine(("[FAIL] episode #{0} ({1}) hole [{2},{3}] has end <= start" -f $i, $ep.id, $hs, $he))
+                exit 1
+            }
+            if ($hs -lt $s -or $he -gt $e) {
+                [Console]::Error.WriteLine(("[FAIL] episode #{0} ({1}) hole [{2},{3}] falls outside episode bounds [{4},{5}]" -f $i, $ep.id, $hs, $he, $s, $e))
+                exit 1
+            }
+            [void]$holes.Add([PSCustomObject]@{ Start = $hs; End = $he })
+        }
+    }
+
+    # Merge overlapping/adjacent holes so the walk below stays simple.
+    # Two parallel ArrayLists of doubles, not a list of pairs: assigning into a
+    # nested indexer of an ArrayList element is unreliable on PowerShell 5.1
+    # (it throws NullReferenceException), which cost one debugging round.
+    $mStart = New-Object System.Collections.ArrayList
+    $mEnd = New-Object System.Collections.ArrayList
+    foreach ($h in ($holes | Sort-Object Start)) {
+        $last = $mStart.Count - 1
+        if ($mStart.Count -gt 0 -and $h.Start -le $mEnd[$last]) {
+            if ($h.End -gt $mEnd[$last]) { $mEnd[$last] = $h.End }
+        } else {
+            [void]$mStart.Add($h.Start)
+            [void]$mEnd.Add($h.End)
+        }
+    }
+
+    $covered = 0.0
+    for ($k = 0; $k -lt $mStart.Count; $k++) { $covered += ($mEnd[$k] - $mStart[$k]) }
+    if ($mStart.Count -gt 0 -and $covered -ge ($e - $s)) {
+        [Console]::Error.WriteLine(("[FAIL] episode #{0} ({1}) holes cover the whole episode [{2},{3}]; nothing would be left to render" -f $i, $ep.id, $s, $e))
+        exit 1
+    }
+
+    # --- emit the cut segments this episode actually becomes ------------------
+    if ($mStart.Count -eq 0) {
+        [void]$lines.Add(('S={0} E={1}' -f $s, $e))
+        $total += ($e - $s)
+    } else {
+        $cursor = $s
+        for ($k = 0; $k -lt $mStart.Count; $k++) {
+            if ($mStart[$k] -gt $cursor) {
+                [void]$lines.Add(('S={0} E={1}' -f $cursor, $mStart[$k]))
+                $total += ($mStart[$k] - $cursor)
+            }
+            if ($mEnd[$k] -gt $cursor) { $cursor = $mEnd[$k] }
+        }
+        if ($cursor -lt $e) {
+            [void]$lines.Add(('S={0} E={1}' -f $cursor, $e))
+            $total += ($e - $cursor)
+        }
+    }
 }
 
-Write-Output ('N=' + $episodes.Count)
+Write-Output ('NEPISODES=' + $episodes.Count)
+# N is the cut-segment count, which is what seg_render_master.sh compares its
+# parsed pair count against.  It equals NEPISODES when no holes are declared.
+Write-Output ('N=' + $lines.Count)
 foreach ($l in $lines) { Write-Output $l }
 Write-Output ('PROGRAM=' + [math]::Round($total, 3))
 exit 0

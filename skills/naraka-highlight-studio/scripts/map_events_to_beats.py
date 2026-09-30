@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from episode_geometry import expand_events_for_holes  # noqa: E402
 
 
 MAJOR_EVENTS = {"parry", "counter", "clutch", "team_save", "ultimate", "kill", "multi_kill"}
@@ -14,7 +18,9 @@ def load_events(path: Path) -> list[dict]:
         value = value.get("events", value.get("event_candidates", []))
     if not isinstance(value, list):
         raise ValueError("events JSON must be a list or an object containing events")
-    return [dict(item) for item in value]
+    # Honour in-segment holes so beat placement is not shifted by an
+    # un-excavated pause.  Events without holes pass through unchanged.
+    return expand_events_for_holes([dict(item) for item in value])
 
 
 def event_types(event: dict) -> set[str]:

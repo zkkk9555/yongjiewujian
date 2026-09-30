@@ -2,8 +2,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+# Program duration is computed by the shared geometry module so this validator,
+# the QA gate and the 4K cut-list reader cannot disagree.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from episode_geometry import (  # noqa: E402
+    timeline_hole_problems,
+    timeline_program_seconds,
+    timeline_raw_span_seconds,
+)
 
 
 def as_float(value: Any, field: str) -> float:
@@ -143,8 +153,21 @@ def main() -> int:
         except (OSError, ValueError, TypeError) as exc:
             checks.append({"name": "proxy_source_offset", "pass": False, "detail": str(exc)})
 
-    program_total = round(sum(float(item["source_end"]) - float(item["source_start"]) for item in episodes if "source_start" in item and "source_end" in item), 3)
+    # Holes are deducted: the program length is what actually gets rendered, so
+    # this must agree with qa_gate.py and read_episode_bounds.ps1.  All three
+    # go through episode_geometry for exactly that reason.
+    program_total = timeline_program_seconds(episodes)
+    raw_total = timeline_raw_span_seconds(episodes)
     checks.append({"name": "program_sum_seconds", "pass": program_total > 0, "program_sum": program_total, "threshold": "> 0, matches program_map header ±0.01s"})
+    if raw_total - program_total > 0.001:
+        hole_count = sum(
+            len(item["excluded_inside"])
+            for item in episodes
+            if isinstance(item.get("excluded_inside"), list)
+        )
+        checks.append({"name": "in_segment_holes_excavated", "pass": True, "excavated_seconds": round(raw_total - program_total, 3), "raw_span": raw_total, "hole_count": hole_count, "threshold": "informational: holes deducted from the program"})
+    hole_problems = timeline_hole_problems(episodes)
+    checks.append({"name": "in_segment_holes_valid", "pass": not hole_problems, "problems": hole_problems[:5], "threshold": "each hole inside its episode, positive length, not the whole episode (overlaps are merged, not rejected)"})
 
     deleted_checks = check_deleted_intervals(data, episodes)
     if deleted_checks:

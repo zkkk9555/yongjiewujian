@@ -159,3 +159,28 @@ Agent 必须做的判断：对每个候选向前、向后扩展检查，不只�
 ```
 
 `source_start` 和 `source_end` 才是渲染依据；`engage_start`、`impact_points` 和 `outcome_time` 用于解释、质检、卡点和后续特效。时间线保持源素材顺序，片段不得重叠或倒序。删除审计 `deleted_intervals[{start, end, category}]` 必须内嵌在时间线 JSON 本体，独立审计文件不算过门（835 v11）；任一边界改动须同步更新相邻删除段并重跑无缝覆盖检查（835 v13）。字段命名以 `scripts/validate_combat_timeline.py` 为准：episode 用 `engage_start`（非 `engage`），删除用 `deleted_intervals`（非 `deletions`/`gaps`）（838 v1）；落盘后用脚本实跑一遍验证，不要只看手工对账。
+
+#### `excluded_inside`：段内挖洞与节目时长公式（861 v4 定案）
+
+`excluded_inside` 是**源时间轴坐标**上的洞——一场战斗打到一半开了战利品面板、进了菜单、或者出现无信息停顿，就把那段挖掉（§3.3 把「战斗内短暂停顿未挖空」列为交付前必查违规项）。**节目时长必须扣掉它**：
+
+```
+program_seconds = Σ_episodes [ (source_end − source_start)
+                             − Σ_holes (hole.end − hole.start) ]
+```
+
+每个带洞的 episode 按洞展开成若干连续切片，按顺序切、顺序 concat。
+
+**861 v4 是这条规则的由来**：时间线声明挖 28.9 s，实际渲出 1090.5 s，`program_map_v4.json` 头部 `program_seconds_total = 1090.5` —— 三者一致，**渲染是对的**。但 `qa_gate.py` 当时用 `Σ(source_end − source_start)` 算期望值（1119.4），把一个正确的渲染判成 `preview_duration FAIL`；`read_episode_bounds.ps1` 只吐 `S=/E=` 对，4K 链路更是**结构上无法表达洞**。已用段内挖洞的任务不止 861：849（5 段）、860（8 段）也在用，所以这是每局都会复发的坑，不是单次意外。
+
+规则在两处实现，**都从洞计算节目时长**：
+
+| 实现 | 服务于 |
+|---|---|
+| `scripts/episode_geometry.py` | `qa_gate.py`、`validate_combat_timeline.py`、OTIO/XML/卡点导出 |
+| `scripts/read_episode_bounds.ps1` | 4K 母版链路（**刻意不依赖 Python**） |
+
+`scripts/test_insegment_holes.sh` 把同一批 fixture 喂给两边、逐段比对，任何一边单独改动都会红。`scripts/test_hole_render_e2e.sh` 再真渲一次 4K 验证成片时长等于扣洞后的值。**改这个公式必须同时改两边并跑这两个测试。**
+
+洞的合法性由 `qa_gate.py` 的 `in_segment_holes` 门禁把守：越界、长度非正、或挖空整段即 FAIL。**重叠与相邻的洞不报错，按并集合并**——取并集没有歧义，报错只会让门禁拦住一个渲染器能正常处理的时间线（这正是原 bug 的同类病）。
+

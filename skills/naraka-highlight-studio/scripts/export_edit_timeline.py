@@ -3,11 +3,15 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 from urllib.parse import quote
 import xml.etree.ElementTree as ET
 
 import opentimelineio as otio
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from episode_geometry import expand_events_for_holes  # noqa: E402
 
 
 def load_events(path: Path) -> list[dict]:
@@ -37,7 +41,10 @@ def load_events(path: Path) -> list[dict]:
         if "program_end" not in event and "timeline_end" in event:
             event["program_end"] = event["timeline_end"]
         events.append(event)
-    return events
+    # Honour in-segment holes before any clip is emitted: an un-excavated pause
+    # would land in the NLE, and every program timestamp after it would be off
+    # by the excavated seconds.  Events without holes pass through unchanged.
+    return expand_events_for_holes(events)
 
 
 def frames(seconds: float, fps: float) -> int:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Project QA gate: one executable entry for the 12 delivery checks.
+"""Project QA gate: one executable entry for the delivery checks.
 
 Zero third-party dependencies: only the standard library plus text output
 parsed from FFprobe/FFmpeg. Any single FAIL blocks review delivery and the
@@ -12,8 +12,19 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
+
+# Program duration is computed by the shared geometry module so the gate, the
+# timeline validator and the 4K cut-list reader cannot disagree.  See that
+# module's docstring for the incident that made this necessary.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from episode_geometry import (  # noqa: E402
+    timeline_hole_problems,
+    timeline_program_seconds,
+    timeline_raw_span_seconds,
+)
 
 SCHEMA = "naraka-highlight-qa-gate/v1"
 
@@ -86,14 +97,20 @@ def gate_source_range(episodes: list[dict], duration: float | None, evidence: st
 
 
 def gate_program_sum(episodes: list[dict], program_map: Path | None, evidence: str) -> dict:
-    total = round(sum(end - start for start, end in (episode_range(ep) for ep in episodes)), 3)
+    # Holes are deducted.  The old sum(source_end - source_start) reported the
+    # raw span, so any timeline using excluded_inside could never reconcile with
+    # its own program map.
+    total = timeline_program_seconds(episodes)
+    raw = timeline_raw_span_seconds(episodes)
+    if raw - total > 0.001:
+        evidence = f"{evidence} (raw span {raw}s, {round(raw - total, 3)}s excavated)"
     if program_map is None or not program_map.is_file():
         return check("program_sum", "WARN", total, "program_map present", evidence)
     try:
         header = json.loads(program_map.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         return check("program_sum", "WARN", total, "program_map parseable", f"{evidence} ({exc})")
-    for key in ("program_duration", "duration", "total_duration"):
+    for key in ("program_seconds_total", "program_duration", "duration", "total_duration"):
         if key in header:
             try:
                 expected = float(header[key])
@@ -101,9 +118,28 @@ def gate_program_sum(episodes: list[dict], program_map: Path | None, evidence: s
                 continue
             delta = abs(total - expected)
             if delta <= SUM_TOLERANCE_S:
-                return check("program_sum", "PASS", total, f"header {expected} ±{SUM_TOLERANCE_S}s", str(program_map))
-            return check("program_sum", "FAIL", total, f"header {expected} ±{SUM_TOLERANCE_S}s", str(program_map))
+                return check("program_sum", "PASS", total, f"header {key} {expected} ±{SUM_TOLERANCE_S}s", str(program_map))
+            return check("program_sum", "FAIL", total, f"header {key} {expected} ±{SUM_TOLERANCE_S}s", str(program_map))
     return check("program_sum", "WARN", total, "header carries program duration", str(program_map))
+
+
+def gate_in_segment_holes(episodes: list[dict], evidence: str) -> dict:
+    """Validate every declared excluded_inside hole.
+
+    Holes are honoured by the cut list, so a malformed one (out of bounds,
+    overlapping, or swallowing the whole episode) would either render garbage
+    or quietly shorten the program.  Catch it here instead.
+    """
+    problems = timeline_hole_problems(episodes)
+    hole_count = sum(
+        len(ep.get("excluded_inside") or []) for ep in episodes
+        if isinstance(ep.get("excluded_inside"), (list, tuple))
+    )
+    if problems:
+        return check("in_segment_holes", "FAIL", problems[0], "holes inside episode, positive length, not the whole episode", evidence)
+    if hole_count == 0:
+        return check("in_segment_holes", "PASS", "no holes declared", "holes inside episode, positive length, not the whole episode", evidence)
+    return check("in_segment_holes", "PASS", f"{hole_count} holes well-formed", "holes inside episode, positive length, not the whole episode", evidence)
 
 
 def run_probe(ffprobe: str | None, target: Path) -> dict | None:
@@ -133,7 +169,9 @@ def gate_preview_duration(probe: dict | None, episodes: list[dict], evidence: st
         actual = float(probe["format"]["duration"])
     except (KeyError, TypeError, ValueError):
         return check("preview_duration", "WARN", "no duration", "preview duration ±0.3s", evidence)
-    expected = sum(end - start for start, end in (episode_range(ep) for ep in episodes))
+    # Holes are deducted -- this is the check that wrongly FAILed task 861's
+    # correct 1090.5 s render by demanding the un-excavated 1119.4 s.
+    expected = timeline_program_seconds(episodes)
     delta = abs(actual - expected)
     if delta <= PREVIEW_DURATION_TOLERANCE_S:
         return check("preview_duration", "PASS", round(actual, 3), f"program {round(expected, 3)} ±{PREVIEW_DURATION_TOLERANCE_S}s", evidence)
@@ -304,7 +342,7 @@ def gate_workspace_hygiene(timeline_path: Path, evidence: str) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run the 12 project QA gates; any FAIL blocks freezing.")
+    parser = argparse.ArgumentParser(description="Run the project QA gates; any FAIL blocks freezing.")
     parser.add_argument("timeline", type=Path)
     parser.add_argument("--program-map", type=Path)
     parser.add_argument("--preview", type=Path)
@@ -332,6 +370,7 @@ def main() -> int:
     if episodes:
         checks.append(gate_timeline_mutex(episodes, str(args.timeline)))
         checks.append(gate_source_range(episodes, args.source_duration, str(args.timeline)))
+        checks.append(gate_in_segment_holes(episodes, str(args.timeline)))
         checks.append(gate_program_sum(episodes, args.program_map, str(args.timeline)))
     ffprobe = args.ffprobe or shutil.which("ffprobe")
     probe = run_probe(ffprobe, args.preview) if args.preview else None

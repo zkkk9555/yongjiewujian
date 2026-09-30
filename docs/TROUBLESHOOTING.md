@@ -304,3 +304,75 @@ ffmpeg 报 `Error opening input: No such file or directory`（文件实际存在
 修复：ps1 统一存为 UTF-8 with BOM（任务内可用 venv python 重写：
 `Path(ps1).write_text(Path(ps1).read_text(encoding='utf-8'), encoding='utf-8-sig')`）。
 `render_preview_v2.ps1` 已按此保存；应急时也可用 Bash 直接调 ffmpeg 绕开。
+
+## PowerShell 管道会把「数组的数组」拆平（2026-09-30，修 `excluded_inside` 时踩到）
+
+把「若干个 `(start, end)` 数对」收进 `ArrayList`，再 `| Sort-Object { $_[0] }`：
+
+```powershell
+$holes.Add(@($hs, $he))          # 装的是一个 Object[]
+foreach ($h in ($holes | Sort-Object { $_[0] })) { ... }
+```
+
+**结果是错的，而且是静默的错**：管道遇到「元素本身是数组」的集合会**自动拆平**，
+一个洞变成两个独立的标量，于是 `$h[1]` 变成 `$null`、比较全部落空。表现为：
+
+- 分段数变多、出现重复切片（`S=2269 E=2322.2` / `S=2269 E=2338` / `S=2269 E=2346.4`）
+- `PROGRAM` 虚高（1228.5，实际应为 1090.5）
+- 想拿它去索引会直接抛 `NullReferenceException`
+
+**修法：用 `PSCustomObject` 承载，不要用裸数对。** 对象不会被管道拆平：
+
+```powershell
+[void]$holes.Add([PSCustomObject]@{ Start = $hs; End = $he })
+foreach ($h in ($holes | Sort-Object Start)) { $h.Start; $h.End }
+```
+
+相关第二个坑：**`$list[0][1] = $x`（对 `ArrayList` 元素做嵌套索引器赋值）在 5.1 上不可靠**，
+同样抛 `NullReferenceException`。改用两个平行的 `ArrayList`（各存 double），或先取出来改好再 `Add` 回去。
+
+> 通用教训：本项目 `scripts\*.ps1` 里的**中文/结构化数据**一律用
+> `[System.IO.File]::ReadAllText(..., [System.Text.Encoding]::UTF8)` 显式读，
+> 集合遍历一律用对象或标量，不要用「数组的数组」。
+
+## `qa_gate.py` 报 `preview_duration FAIL`，但预览其实是对的（2026-09-30 已修）
+
+**症状**：`measured` 比 `threshold` 少几十秒，`status: NOT_FROZEN`，Agent 因此反复重渲。
+
+**根因**：节目时长的公式漏了 `excluded_inside`（段内挖洞）。
+`qa_gate.py` 曾用 `Σ(source_end − source_start)`，**不扣洞**，于是对着一个正确
+扣洞渲出来的预览报 FAIL。861 v4 实例：实测 1090.5 s、门禁期望 1119.4 s、
+差值 28.9 s **恰好等于**时间线声明的挖洞总长。
+
+**判定这类 FAIL 是不是误报，三步**：
+
+1. `ffprobe -show_entries format=duration` 直接量成片，不信任何报告的自报值。
+2. 看 `timeline\program_map_vN.json` 头部 `program_seconds_total` —— **时间线自己知道真实节目时长**。
+3. 手算 `Σ(end − start) − Σ(hole.end − hole.start)`，与前两步对账。
+
+三者一致就说明**渲染是对的、门禁算错了**，别去改时间线。规则现已写进
+`skills/naraka-highlight-studio/references/complete-combat-roughcut.md`
+（`excluded_inside`：段内挖洞与节目时长公式），两处实现由
+`scripts\test_insegment_holes.sh` 锁一致性、`scripts\test_hole_render_e2e.sh` 做端到端验证。
+
+## `verify_master.sh` 报 `full decode did not exit 0`，但母版完全正常（2026-09-30 已修）
+
+**症状**：`[FAIL] full decode did not exit 0`，而手工 `ffmpeg -i out.mp4 -f null -` 退出码是 0。
+
+**根因**：解码命令硬写了 `-map 0:a:0`。**母版没有音轨时 ffmpeg 无法解析该 map**：
+
+```
+Stream map '' matches no streams.
+Failed to set value '0:a:0' for option 'map': Invalid argument
+DECODE_EXIT=127
+```
+
+游戏实录通常有音轨所以平时不触发，但这是**同一类病**：门禁比真相更严，
+把一个完全正常的产物判成 FAIL。已改为**先探测有没有音轨再决定是否 map**
+（日志会打 `decode_map=video` 或 `decode_map=video+audio`）。
+
+> 同类教训：门禁断言的东西必须**宽于或等于真相**，不能严于真相。
+> 同一次修复里还发现 `read_episode_bounds.ps1` 初版对**重叠的洞**报 FAIL、
+> 而 PowerShell 侧静默合并照渲——门禁拦住了一个渲染器能正常处理的时间线。
+> 现在两边都按并集合并，并由测试锁住。
+

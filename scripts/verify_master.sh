@@ -57,8 +57,20 @@ SUB_COUNT=$(printf '%s\n' "$SUBSTREAMS" | grep -c . || true)
   # -xerror makes ffmpeg exit non-zero on a real decode error.  Capture the code
   # explicitly: under `set -e` a plain call would abort before printing it, and
   # the whole point of this gate is to report that number.
+  #
+  # The audio map is OPTIONAL.  A hardcoded `-map 0:a:0` made ffmpeg abort with
+  # "Stream map '' matches no streams" (exit 127) on any master cut from a
+  # source with no audio track, so this gate reported a decode failure for a file
+  # that decodes perfectly -- the same false-alarm disease as the qa_gate duration
+  # bug.  Map audio only when the master actually has one, and say so in the log.
+  DECODE_MAP=(-map 0:v:0)
+  HAS_AUDIO=$("$FP" -v error -select_streams a:0 -show_entries stream=index -of csv=p=0 "$M_W" | tr -d '\r ')
+  if [ -n "$HAS_AUDIO" ]; then
+    DECODE_MAP+=(-map 0:a:0)
+  fi
+  echo "decode_map=video$( [ -n "$HAS_AUDIO" ] && echo '+audio' || echo ' (no audio stream in master)')"
   set +e
-  "$FF" -v error -xerror -i "$M_W" -map 0:v:0 -map 0:a:0 -f null -
+  "$FF" -v error -xerror -i "$M_W" "${DECODE_MAP[@]}" -f null -
   DECODE_EXIT=$?
   set -e
   echo "DECODE_EXIT=$DECODE_EXIT"
