@@ -1,6 +1,6 @@
 # Spec：交付链路收敛（乱码目录 / 成片只落 E 盘 / 收尾真删干净）
 
-**Status:** in-progress
+**Status:** completed（2026-09-30，随 v1.002 入库）
 **Lane:** C（跨 5+ 文件、改变交付目标、引入新不变量）
 **Gate 0:** MISS —— `scripts/` 与 v1.001 逐字一致，三个问题均未修；其它对话是**绕过**而非修复
 （证据：`git status scripts/` 为空；任务 15.855 / 16.858 的成片是人工挪到 E 盘的）。
@@ -60,6 +60,19 @@ P2 与 P3 同源：渲染目标定错了。
       附一键清理命令；新增 `scripts\sanitize_stray_dirs.ps1`。
 - [x] **S2 成片只落 E 盘**：渲染/验收/收尾三处目标一致；收尾先验 E 盘再删本地。
 - [x] **S3 文档全部改 E 盘口径**，并写清"任务目录不得长期持有成片"。
+
+### 追加 slice（2026-09-30 第二轮，用户要求"归位 + 查原因 + 修"）
+
+- [x] **S4 取证帧归位**：18.860 的 `timeline\evidence_v2..v5\` 里 2351 张 jpg / 667.8 MB
+      移到 `shots\timeline_evidence\`。`timeline\` 从 614 MB 降到 1.49 MB，
+      4 份 `combat_episodes_v*.json` 与全部构建脚本原地保留。
+- [x] **S5 根因修复**：`check_task_hygiene.ps1` 新增 `MISCABLED_TIMELINE` 硬门禁——
+      `timeline\` 下出现图片/视频即判违规（只抓媒体，不误伤 `.py` 构建脚本）。
+      下一版 workflow 跑卫生门禁就会当场拦住，不会再攒到 600 MB。
+
+**S5 的一个自我修正**：初版规则写成"`timeline\` 下任何非 json/md/txt 文件都违规"，
+实测把 `evidence_v2\build_v2.py` 也判成了违规——但构建脚本是任务证据、必须保留。
+已收紧为只匹配媒体扩展名（jpg/png/mp4/...），复测 860 与 849/859 均为 0 违规。
 
 ## Implementation Decisions
 

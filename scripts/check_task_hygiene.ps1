@@ -54,6 +54,23 @@ foreach ($f in $zeroLogs) {
     [void]$violations.Add(("ZERO_BYTE:{0}" -f $f.FullName))
 }
 
+# --- 2b. timeline\ 只放时间线数据：图片/视频属于 shots\，放错就永远删不掉 ------
+# 起因：18.860 把 2351 张取证帧（667.8 MB）写进了 timeline\evidence_v*\。因为 timeline\
+# 是收尾清理的"保留项"，这 614 MB 永远不会被回收，任务目录再也瘦不下来。
+# 取证帧的唯一正确位置是 shots\。这里判硬违规，不只是提示。
+$tlRoot = Join-Path $TaskDir 'timeline'
+$tlStray = @()
+if (Test-Path -LiteralPath $tlRoot -PathType Container) {
+    # Only media is a violation.  Build scripts (.py/.ps1) and notes under
+    # timeline\evidence_v*\ are legitimate task evidence -- a previous revision of
+    # this check flagged them too, which was wrong.
+    $tlStray = @(Get-ChildItem -Recurse -LiteralPath $tlRoot -File -Force -ErrorAction SilentlyContinue |
+                 Where-Object { $_.Extension -match '^\.(jpg|jpeg|png|gif|bmp|webp|tif|tiff|mp4|mkv|mov|webm|avi)$' })
+    foreach ($f in $tlStray) {
+        [void]$violations.Add(("MISCABLED_TIMELINE:{0}  (取证帧/媒体应放 shots\,不是 timeline\)" -f $f.FullName))
+    }
+}
+
 # --- 3. 旧预览：只留相邻两版（vN-1 及更早判 STALE_PREVIEW）--------------------
 $pvNums = @(Get-ChildItem -LiteralPath (Join-Path $TaskDir 'preview') -File -Force -ErrorAction SilentlyContinue |
             ForEach-Object {
@@ -87,7 +104,7 @@ if ($shotStray.Count -gt 0) {
 
 # --- 汇总 ----------------------------------------------------------------------
 
-Write-Output ("Checks: root-loose/zero-byte/stale-preview/stale-timeline (+shot-info)")
+Write-Output ("Checks: root-loose/zero-byte/misplaced-timeline/stale-preview/stale-timeline (+shot-info)")
 foreach ($v in $violations) { Write-Output ("  [VIOLATION] " + $v) }
 
 if ($violations.Count -eq 0) {
