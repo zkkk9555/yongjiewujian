@@ -1,0 +1,12 @@
+{
+ "schema": "naraka-proxy-map/v1",
+ "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+ "source_duration": 1152.233,
+ "proxy": "cache/proxy_360p30.mp4",
+ "proxy_duration": 1152.233008,
+ "proxy_scale": "640x360 @ 30fps, libx264 crf 30, no -ss seek, no -copyts",
+ "proxy_offset": 0.0,
+ "proxy_offset_threshold": "<= 1 frame @60fps",
+ "note": "The proxy was produced by a single pass with no input seek, so proxy time equals source time. Every 1 fps frame in shots/segN/hd was burned with %{pts:hms} after that pass; seg10 independently verified filename second == burned h:mm:ss == source second (t0793.0.jpg reads 00:13:13.000 = 793 s).",
+ "verified_by": "reports/seg10_scan_report.md (timeline calibration), reports/seg1_scan_report.md, reports/seg8_scan_report.md"
+}

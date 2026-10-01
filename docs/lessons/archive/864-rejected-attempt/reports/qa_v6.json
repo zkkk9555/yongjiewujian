@@ -1,0 +1,115 @@
+{
+  "schema": "naraka-highlight-qa-gate/v1",
+  "timeline": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v6.json",
+  "checks": [
+    {
+      "name": "timeline_mutex",
+      "result": "PASS",
+      "measured": "7 episodes ordered",
+      "threshold": "no overlap",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v6.json"
+    },
+    {
+      "name": "source_range",
+      "result": "PASS",
+      "measured": "7 in range",
+      "threshold": "0 <= start < end <= duration",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v6.json"
+    },
+    {
+      "name": "in_segment_holes",
+      "result": "PASS",
+      "measured": "3 holes well-formed",
+      "threshold": "holes inside episode, positive length, not the whole episode",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v6.json"
+    },
+    {
+      "name": "program_sum",
+      "result": "PASS",
+      "measured": 661.06,
+      "threshold": "header program_seconds_total 661.06 ±0.01s",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\program_map_v6.json"
+    },
+    {
+      "name": "preview_duration",
+      "result": "PASS",
+      "measured": 661.088,
+      "threshold": "program 661.06 ±0.3s",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "av_sync",
+      "result": "PASS",
+      "measured": 0.001,
+      "threshold": "<= 0.2s",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "frame_rate",
+      "result": "PASS",
+      "measured": "60/1",
+      "threshold": "CFR",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "media_filters",
+      "result": "WARN",
+      "measured": "see render/selfaudit evidence",
+      "threshold": "black/freeze/silence/ebur128 on file",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "subtitle_span",
+      "result": "WARN",
+      "measured": "no srt",
+      "threshold": "SRT checked",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "subtitle_stats",
+      "result": "WARN",
+      "measured": "no stats",
+      "threshold": "stats on file",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "no_burned_variant",
+      "result": "WARN",
+      "measured": "no master",
+      "threshold": "external SRT only, never burn",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "no_subtitle_stream",
+      "result": "PASS",
+      "measured": 0,
+      "threshold": "0 subtitle streams",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "proxy_map",
+      "result": "WARN",
+      "measured": "no proxy map",
+      "threshold": "proxy offset recorded",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    },
+    {
+      "name": "workspace_hygiene",
+      "result": "PASS",
+      "measured": "no root strays",
+      "threshold": "<= 10 stray files",
+      "evidence": "C:\\Project\\永劫无间"
+    },
+    {
+      "name": "freeze_kit",
+      "result": "PASS",
+      "measured": "4 files",
+      "threshold": "timeline+map+validate+preview+decode+srt",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v6.mp4"
+    }
+  ],
+  "fail": 0,
+  "warn": 5,
+  "status": "FROZEN_CANDIDATE",
+  "pass": true
+}

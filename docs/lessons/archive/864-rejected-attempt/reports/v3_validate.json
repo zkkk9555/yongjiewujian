@@ -1,0 +1,270 @@
+{
+  "schema": "naraka-combat-roughcut-qa/v1",
+  "timeline": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v3.json",
+  "episode_count": 11,
+  "checks": [
+    {
+      "name": "episodes_non_empty",
+      "pass": true,
+      "count": 11
+    },
+    {
+      "name": "episode_001",
+      "pass": true,
+      "source_start": 181.0,
+      "source_end": 266.5,
+      "engage_start": 186.0,
+      "outcome_time": 253.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_002",
+      "pass": true,
+      "source_start": 305.0,
+      "source_end": 345.0,
+      "engage_start": 310.0,
+      "outcome_time": 338.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_003",
+      "pass": true,
+      "source_start": 357.0,
+      "source_end": 404.0,
+      "engage_start": 359.0,
+      "outcome_time": 398.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_004",
+      "pass": true,
+      "source_start": 416.99,
+      "source_end": 444.0,
+      "engage_start": 417.0,
+      "outcome_time": 430.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_005",
+      "pass": true,
+      "source_start": 495.0,
+      "source_end": 517.5,
+      "engage_start": 499.0,
+      "outcome_time": 512.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_006",
+      "pass": true,
+      "source_start": 517.5,
+      "source_end": 561.2,
+      "engage_start": 522.0,
+      "outcome_time": 549.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_007",
+      "pass": true,
+      "source_start": 598.25,
+      "source_end": 685.0,
+      "engage_start": 602.0,
+      "outcome_time": 670.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_008",
+      "pass": true,
+      "source_start": 726.0,
+      "source_end": 810.0,
+      "engage_start": 731.0,
+      "outcome_time": 796.5,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_009",
+      "pass": true,
+      "source_start": 910.99,
+      "source_end": 943.0,
+      "engage_start": 911.0,
+      "outcome_time": 930.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_010",
+      "pass": true,
+      "source_start": 948.99,
+      "source_end": 1037.0,
+      "engage_start": 949.0,
+      "outcome_time": 1024.0,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "episode_011",
+      "pass": true,
+      "source_start": 1053.0,
+      "source_end": 1127.45,
+      "engage_start": 1058.0,
+      "outcome_time": 1122.5,
+      "complete": true,
+      "needs_review": false,
+      "valid_range": true,
+      "within_source": true,
+      "monotonic_non_overlapping": true
+    },
+    {
+      "name": "source_duration_valid",
+      "pass": true,
+      "source_duration": 1152.233
+    },
+    {
+      "name": "program_sum_seconds",
+      "pass": true,
+      "program_sum": 580.26,
+      "threshold": "> 0, matches program_map header ±0.01s"
+    },
+    {
+      "name": "in_segment_holes_excavated",
+      "pass": true,
+      "excavated_seconds": 50.67,
+      "raw_span": 630.93,
+      "hole_count": 10,
+      "threshold": "informational: holes deducted from the program"
+    },
+    {
+      "name": "in_segment_holes_valid",
+      "pass": true,
+      "problems": [],
+      "threshold": "each hole inside its episode, positive length, not the whole episode (overlaps are merged, not rejected)"
+    },
+    {
+      "name": "deleted_interval_1",
+      "pass": true,
+      "start": 0.0,
+      "end": 181.0,
+      "category": "birth_ability_ui_travel",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_2",
+      "pass": true,
+      "start": 266.5,
+      "end": 305.0,
+      "category": "travel_loot_idle",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_3",
+      "pass": true,
+      "start": 345.0,
+      "end": 357.0,
+      "category": "loot_heal_travel",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_4",
+      "pass": true,
+      "start": 404.0,
+      "end": 416.99,
+      "category": "ui_panel_selection",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_5",
+      "pass": true,
+      "start": 444.0,
+      "end": 495.0,
+      "category": "travel_loot",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_6",
+      "pass": true,
+      "start": 561.2,
+      "end": 598.25,
+      "category": "loot_shop_ui_travel",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_7",
+      "pass": true,
+      "start": 685.0,
+      "end": 726.0,
+      "category": "traversal_loot_environment",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_8",
+      "pass": true,
+      "start": 810.0,
+      "end": 910.99,
+      "category": "trade_loot_navigation",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_9",
+      "pass": true,
+      "start": 943.0,
+      "end": 948.99,
+      "category": "traversal",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_10",
+      "pass": true,
+      "start": 1037.0,
+      "end": 1053.0,
+      "category": "traversal",
+      "overlaps_selected": false
+    },
+    {
+      "name": "deleted_interval_11",
+      "pass": true,
+      "start": 1127.45,
+      "end": 1152.233,
+      "category": "lobby_idle",
+      "overlaps_selected": false
+    }
+  ],
+  "warnings": [],
+  "pass": true
+}

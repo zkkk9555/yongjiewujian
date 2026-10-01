@@ -1,0 +1,115 @@
+{
+  "schema": "naraka-highlight-qa-gate/v1",
+  "timeline": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v1_programbounds.json",
+  "checks": [
+    {
+      "name": "timeline_mutex",
+      "result": "PASS",
+      "measured": "12 episodes ordered",
+      "threshold": "no overlap",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v1_programbounds.json"
+    },
+    {
+      "name": "source_range",
+      "result": "PASS",
+      "measured": "12 in range",
+      "threshold": "0 <= start < end <= duration",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v1_programbounds.json"
+    },
+    {
+      "name": "in_segment_holes",
+      "result": "PASS",
+      "measured": "no holes declared",
+      "threshold": "holes inside episode, positive length, not the whole episode",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v1_programbounds.json"
+    },
+    {
+      "name": "program_sum",
+      "result": "PASS",
+      "measured": 614.9,
+      "threshold": "header program_seconds_total 614.9 ±0.01s",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\program_map_v1.json"
+    },
+    {
+      "name": "preview_duration",
+      "result": "PASS",
+      "measured": 614.921,
+      "threshold": "program 614.9 ±0.3s",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v1.mp4"
+    },
+    {
+      "name": "av_sync",
+      "result": "PASS",
+      "measured": 0.021,
+      "threshold": "<= 0.2s",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v1.mp4"
+    },
+    {
+      "name": "frame_rate",
+      "result": "PASS",
+      "measured": "60/1",
+      "threshold": "CFR",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v1.mp4"
+    },
+    {
+      "name": "media_filters",
+      "result": "WARN",
+      "measured": "see render/selfaudit evidence",
+      "threshold": "black/freeze/silence/ebur128 on file",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v1.mp4"
+    },
+    {
+      "name": "subtitle_span",
+      "result": "PASS",
+      "measured": "51 cues",
+      "threshold": "zero cross-cut",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\captions\\864-review-v1.srt"
+    },
+    {
+      "name": "subtitle_stats",
+      "result": "PASS",
+      "measured": 51,
+      "threshold": "matches stats",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\captions\\864-review-v1.stats.json"
+    },
+    {
+      "name": "no_burned_variant",
+      "result": "WARN",
+      "measured": "no master",
+      "threshold": "external SRT only, never burn",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v1.mp4"
+    },
+    {
+      "name": "no_subtitle_stream",
+      "result": "PASS",
+      "measured": 0,
+      "threshold": "0 subtitle streams",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v1.mp4"
+    },
+    {
+      "name": "proxy_map",
+      "result": "PASS",
+      "measured": 0.0,
+      "threshold": "<= 1 frame @60fps",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\proxy_map_v1.json"
+    },
+    {
+      "name": "workspace_hygiene",
+      "result": "PASS",
+      "measured": "no root strays",
+      "threshold": "<= 10 stray files",
+      "evidence": "C:\\Project\\永劫无间"
+    },
+    {
+      "name": "freeze_kit",
+      "result": "PASS",
+      "measured": "5 files",
+      "threshold": "timeline+map+validate+preview+decode+srt",
+      "evidence": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\preview\\864-review-v1.mp4"
+    }
+  ],
+  "fail": 0,
+  "warn": 2,
+  "status": "FROZEN_CANDIDATE",
+  "pass": true
+}

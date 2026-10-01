@@ -1,0 +1,304 @@
+{
+ "schema": "naraka-combat-roughcut-timeline/v1",
+ "coordinate_space": "PROGRAM SECONDS (verification view only, never rendered)",
+ "derived_from": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v4.json",
+ "program_map": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\program_map_v4.json",
+ "program_seconds_total": 562.97,
+ "combat_episodes": [
+  {
+   "id": "combat_001#0",
+   "source_start": 0.0,
+   "source_end": 48.0,
+   "engage_start": 0.0,
+   "outcome_time": 48.0,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    181.0,
+    229.0
+   ]
+  },
+  {
+   "id": "combat_001#1",
+   "source_start": 48.0,
+   "source_end": 80.5,
+   "engage_start": 48.0,
+   "outcome_time": 80.5,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    234.0,
+    266.5
+   ]
+  },
+  {
+   "id": "combat_002#0",
+   "source_start": 80.5,
+   "source_end": 105.23,
+   "engage_start": 80.5,
+   "outcome_time": 105.23,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    320.27,
+    345.0
+   ]
+  },
+  {
+   "id": "combat_003#0",
+   "source_start": 105.23,
+   "source_end": 152.23,
+   "engage_start": 105.23,
+   "outcome_time": 152.23,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    357.0,
+    404.0
+   ]
+  },
+  {
+   "id": "combat_004#0",
+   "source_start": 152.23,
+   "source_end": 179.24,
+   "engage_start": 152.23,
+   "outcome_time": 179.24,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    416.99,
+    444.0
+   ]
+  },
+  {
+   "id": "combat_005#0",
+   "source_start": 179.24,
+   "source_end": 201.74,
+   "engage_start": 179.24,
+   "outcome_time": 201.74,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    495.0,
+    517.5
+   ]
+  },
+  {
+   "id": "combat_006#0",
+   "source_start": 201.74,
+   "source_end": 238.44,
+   "engage_start": 201.74,
+   "outcome_time": 238.44,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    517.5,
+    554.2
+   ]
+  },
+  {
+   "id": "combat_006#1",
+   "source_start": 238.44,
+   "source_end": 244.02,
+   "engage_start": 238.44,
+   "outcome_time": 244.02,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    555.62,
+    561.2
+   ]
+  },
+  {
+   "id": "combat_007#0",
+   "source_start": 244.02,
+   "source_end": 269.77,
+   "engage_start": 244.02,
+   "outcome_time": 269.77,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    598.25,
+    624.0
+   ]
+  },
+  {
+   "id": "combat_007#1",
+   "source_start": 269.77,
+   "source_end": 271.87,
+   "engage_start": 269.77,
+   "outcome_time": 271.87,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    624.3,
+    626.4
+   ]
+  },
+  {
+   "id": "combat_007#2",
+   "source_start": 271.87,
+   "source_end": 275.17,
+   "engage_start": 271.87,
+   "outcome_time": 275.17,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    627.4,
+    630.7
+   ]
+  },
+  {
+   "id": "combat_007#3",
+   "source_start": 275.17,
+   "source_end": 302.27,
+   "engage_start": 275.17,
+   "outcome_time": 302.27,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    632.4,
+    659.5
+   ]
+  },
+  {
+   "id": "combat_007#4",
+   "source_start": 302.27,
+   "source_end": 319.67,
+   "engage_start": 302.27,
+   "outcome_time": 319.67,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    661.2,
+    678.6
+   ]
+  },
+  {
+   "id": "combat_007#5",
+   "source_start": 319.67,
+   "source_end": 325.07,
+   "engage_start": 319.67,
+   "outcome_time": 325.07,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    679.6,
+    685.0
+   ]
+  },
+  {
+   "id": "combat_008#0",
+   "source_start": 325.07,
+   "source_end": 354.32,
+   "engage_start": 325.07,
+   "outcome_time": 354.32,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    726.0,
+    755.25
+   ]
+  },
+  {
+   "id": "combat_008#1",
+   "source_start": 354.32,
+   "source_end": 377.27,
+   "engage_start": 354.32,
+   "outcome_time": 377.27,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    757.0,
+    779.95
+   ]
+  },
+  {
+   "id": "combat_008#2",
+   "source_start": 377.27,
+   "source_end": 383.72,
+   "engage_start": 377.27,
+   "outcome_time": 383.72,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    791.9,
+    798.35
+   ]
+  },
+  {
+   "id": "combat_009#0",
+   "source_start": 383.72,
+   "source_end": 415.73,
+   "engage_start": 383.72,
+   "outcome_time": 415.73,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    910.99,
+    943.0
+   ]
+  },
+  {
+   "id": "combat_010#0",
+   "source_start": 415.73,
+   "source_end": 503.74,
+   "engage_start": 415.73,
+   "outcome_time": 503.74,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    948.99,
+    1037.0
+   ]
+  },
+  {
+   "id": "combat_011#0",
+   "source_start": 503.74,
+   "source_end": 551.49,
+   "engage_start": 503.74,
+   "outcome_time": 551.49,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    1053.0,
+    1100.75
+   ]
+  },
+  {
+   "id": "combat_011#1",
+   "source_start": 551.49,
+   "source_end": 562.97,
+   "engage_start": 551.49,
+   "outcome_time": 562.97,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    1115.97,
+    1127.45
+   ]
+  }
+ ],
+ "deleted_intervals": []
+}

@@ -1,0 +1,16 @@
+{
+ "schema": "naraka-srt-crosscheck/v1",
+ "srt": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\captions\\864-review-v3.srt",
+ "program_map": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\program_map_v3.json",
+ "cue_count": 40,
+ "cut_count": 20,
+ "cross_cut_spans": 0,
+ "overlaps": 0,
+ "timing_problems": 0,
+ "gap_problems": 0,
+ "problems": [],
+ "pass": true,
+ "note": "Times are PROGRAM seconds; cut list read from program_map. This is the clock-aware replacement for qa_gate.subtitle_span, which compares program-timed cues against source-timed episode ranges.",
+ "stats_declared_count": 40,
+ "stats_match": true
+}

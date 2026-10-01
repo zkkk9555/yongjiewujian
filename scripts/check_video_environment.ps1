@@ -313,6 +313,40 @@ if (Test-Path -LiteralPath $legacyVenv) {
     Add-Result 'NOTE' 'legacy duplicate env' "present (do not use, do not delete without asking) :: $legacyVenv"
 }
 
+# --- Task numbering guard --------------------------------------------------
+#
+# The stray-directory guard above only looks at the project's PARENT.  It cannot
+# see a malformed directory INSIDE 123\, which is where the numbering actually
+# lives.  On 2026-10-01 a task directory named
+#
+#     20.863永劫无间 02-57-13          <- date segment missing
+#
+# sat next to the real 20.863永劫无间 2026-09-30 02-57-13, squatting on number
+# 20.  It had no error, no files, and no git trace (git does not track empty
+# directories), so nothing reported it until a human went looking.  Cause was
+# rebuilding the stem as ($parts[0] + ' ' + ($parts[-1])) after splitting on
+# whitespace -- the material name has THREE fields, and that shortcut ate the
+# middle one.
+#
+# WARN, not BLOCKER: a stale empty shell does not make a roughcut wrong, it only
+# makes the numbering ambiguous.  Fix it before creating the next task so the new
+# one does not inherit a squatted number.
+$numberingScript = Join-Path $ProjectRoot 'scripts\check_task_numbering.ps1'
+if (Test-Path -LiteralPath $numberingScript -PathType Leaf) {
+    $numberingOut = & $numberingScript 2>&1 | Out-String
+    $numberingCode = $LASTEXITCODE
+    $numberingLines = @($numberingOut -split "`r?`n" | Where-Object { $_.Trim() -ne '' })
+    if ($numberingCode -eq 0) {
+        Add-Result 'PASS' 'task numbering' ($numberingLines | Select-Object -First 1)
+    } else {
+        $detail = (@($numberingLines | Where-Object { $_ -match '\[VIOLATION\]' }) -join ' | ')
+        Add-Result 'WARN' 'task numbering' ("malformed or duplicated task directories under 123\: " + $detail)
+        Add-Result 'NOTE' 'task numbering' ("do NOT auto-delete. Inspect first, then fix by hand, or: & 'C:\Project\永劫无间\scripts\check_task_numbering.ps1' to list. A squatted number makes the next task number ambiguous.")
+    }
+} else {
+    Add-Result 'NOTE' 'task numbering' "scripts\check_task_numbering.ps1 not found; skipped"
+}
+
 # ---------------------------------------------------------------------------
 # Verdict
 # ---------------------------------------------------------------------------

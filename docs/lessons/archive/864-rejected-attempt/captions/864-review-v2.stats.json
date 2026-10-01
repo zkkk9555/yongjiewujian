@@ -1,0 +1,28 @@
+{
+ "schema": "naraka-subtitle-stats/v1",
+ "srt": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\captions\\864-review-v2.srt",
+ "count": 42,
+ "total": 42,
+ "source_segments": 180,
+ "source_segments_inside_retained_windows": 75,
+ "accounting": "inside_retained=75 = kept 42 + dropped_empty 0 + dropped_low_confidence 12 + dropped_hallucination_loop 10 + dropped_filler_or_short 11 + dropped_cps_or_too_short 0 ; straddling_a_cut=20 ; outside_retained_windows=85 ; source_segments_total=180",
+ "thresholds": {
+  "min_avg_logprob": -0.6,
+  "max_no_speech_prob": 0.4,
+  "max_source_cue_seconds": 7.0,
+  "min_cue_seconds": 0.8,
+  "max_cue_seconds": 7.0,
+  "max_cps_zh": 12.0,
+  "min_gap_seconds": 0.12
+ },
+ "dropped_empty": 0,
+ "dropped_low_confidence": 12,
+ "dropped_hallucination_loop": 10,
+ "dropped_filler_or_short": 11,
+ "dropped_cps_or_too_short": 0,
+ "outside_retained_windows": 85,
+ "split_at_cut": 20,
+ "cross_cut_spans": 0,
+ "program_seconds_total": 587.33,
+ "mode": "external sidecar SRT (no burn, no mux)"
+}

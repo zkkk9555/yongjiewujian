@@ -1,0 +1,905 @@
+{
+  "schema": "naraka-combat-roughcut-timeline/v1",
+  "version": "v6",
+  "supersedes": "v5",
+  "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+  "source_duration": 1152.233,
+  "program_seconds_total": 661.06,
+  "generated_by": "commander build_v6_timeline.py",
+  "generated_from": "v5 + user correction (2:36 case: 拉出战场->打药->再进场 was truncated mid-sequence)",
+  "decision_log": "reports\\merge_decision_v3.md",
+  "v2_change_summary": "11 场边界 6 场改动（combat_001/003/004/006/007/008）、2 场尾界微调（combat_011）、3 场完全不动（combat_002/005/009/010 中 combat_002/005/009/010 边界不变）；段内挖洞 6 处共 44.92 秒（v1 为 1 处 15.1 秒）；deleted_intervals 由 16 条重划为 11 条，仍精确铺满 [0, 1152.233]；节目总秒 614.9 → 587.33。全部 needs_review = false。",
+  "combat_episodes": [
+    {
+      "id": "combat_001",
+      "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+      "source_start": 181.0,
+      "source_end": 266.5,
+      "engage_start": 186.0,
+      "impact_points": [
+        186.0,
+        187.0,
+        192.0,
+        212.0,
+        214.0,
+        221.0,
+        227.0,
+        239.0,
+        240.0,
+        242.0,
+        243.0,
+        252.0,
+        253.0,
+        255.0,
+        256.0
+      ],
+      "outcome_time": 253.0,
+      "boundary_reason": "unchanged from v5 (single engagement, no hole)",
+      "event_types": [
+        "downed",
+        "kill",
+        "loot",
+        "parry",
+        "ultimate"
+      ],
+      "confidence": "high",
+      "complete": true,
+      "needs_review": false,
+      "excluded_inside": [],
+      "notes": "【v6】由 combat_001 合并为一场完整战斗。合并前的分界会把「拉出战场 → 打药/补给 → 再进场」这一整个过程从中间断开，视觉上就像「东切一段」。合并后本场在程序上是**一段连续画面**，不再有任何中途切点。合并前各场的原始记录见 merge_decision_v5.md。",
+      "evidence": {
+        "merged_from": [
+          "combat_001"
+        ]
+      }
+    },
+    {
+      "id": "combat_002",
+      "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+      "source_start": 320.27,
+      "source_end": 345.0,
+      "engage_start": 320.3,
+      "impact_points": [
+        321.0,
+        322.0,
+        333.0,
+        334.0,
+        336.0,
+        337.0,
+        338.0,
+        339.0,
+        341.0,
+        344.0
+      ],
+      "outcome_time": 338.0,
+      "boundary_reason": "【v6】未合并。后续探测：下一场 combat_003 的头之间的源 345–357（12 s）符录逐帧为**纯跑图位移**（字幕 344 烟弹 → 348 跑事 → 352 石场 → 356 桥 → 358 第一次出现敌方名条），属于换了对手，**不是同一场战斗**。\n保留 combat_002 作为独立一场。",
+      "event_types": [
+        "escape",
+        "kill",
+        "loot"
+      ],
+      "confidence": "high",
+      "complete": true,
+      "needs_review": false,
+      "excluded_inside": [],
+      "notes": "【v6】由 combat_002 合并为一场完整战斗。合并前的分界会把「拉出战场 → 打药/补给 → 再进场」这一整个过程从中间断开，视觉上就像「东切一段」。合并后本场在程序上是**一段连续画面**，不再有任何中途切点。合并前各场的原始记录见 merge_decision_v5.md。",
+      "evidence": {
+        "merged_from": [
+          "combat_002"
+        ]
+      }
+    },
+    {
+      "id": "combat_003",
+      "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+      "source_start": 357.0,
+      "source_end": 444.0,
+      "engage_start": 359.0,
+      "impact_points": [
+        359.0,
+        361.0,
+        368.0,
+        377.0,
+        382.0,
+        383.0,
+        386.0,
+        396.0,
+        397.0,
+        398.0,
+        399.0,
+        417.0,
+        422.0,
+        425.0,
+        426.0,
+        427.0,
+        428.0,
+        429.0,
+        430.0,
+        431.0,
+        432.0,
+        433.0,
+        434.0,
+        435.0,
+        439.0,
+        441.0
+      ],
+      "outcome_time": 430.0,
+      "boundary_reason": "【v6 合并 · 用户指定【【v6 合并 · 用户指定】**用户审片指出：节目 2:36（源 402.8）处的「拉出战场 → 打药 → 再进场」88属于同一场战斗，但 v5 在源 404.0 把它截断了。\n【v5 被切掉的那 12.99 s 实际内容】4K 逐帧核实】：403 拔战后的拉开 → **406 / 409 / 412 = 「选择强化」三卡 + 四栏面板开着**（语音 401.57「选那个不能打招」、406.57「我还没选法门」） → 415 跑动 → **418 重新接战**（敌方名条在屏）。\n**那块面板正是补给步骤本身** —— v1„v4 一直当它是待清除 UI 地挖掉，实际上把一场完整战斗从中间切开了。合并后本场 = 源 [357.0, 444.0]，两次交战（结果 398 / 结果 430）之间的补给与运动全部保留。",
+      "event_types": [
+        "downed",
+        "escape",
+        "loot",
+        "ultimate"
+      ],
+      "confidence": "high",
+      "complete": true,
+      "needs_review": false,
+      "excluded_inside": [],
+      "notes": "【v6】由 combat_003 + combat_004 合并为一场完整战斗。合并前的分界会把「拉出战场 → 打药/补给 → 再进场」这一整个过程从中间断开，视觉上就像「东切一段」。合并后本场在程序上是**一段连续画面**，不再有任何中途切点。合并前各场的原始记录见 merge_decision_v5.md。",
+      "evidence": {
+        "merged_from": [
+          "combat_003",
+          "combat_004"
+        ]
+      }
+    },
+    {
+      "id": "combat_005",
+      "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+      "source_start": 495.0,
+      "source_end": 561.2,
+      "engage_start": 499.0,
+      "impact_points": [
+        499.0,
+        500.0,
+        501.0,
+        505.0,
+        508.0,
+        511.0,
+        512.0,
+        513.0,
+        514.0,
+        515.0,
+        517.0,
+        522.0,
+        528.0,
+        531.0,
+        535.0,
+        539.0,
+        541.0,
+        543.0,
+        544.0,
+        545.0,
+        547.0,
+        549.0,
+        550.0,
+        551.0,
+        552.0,
+        553.0,
+        556.0
+      ],
+      "outcome_time": 549.0,
+      "boundary_reason": "【v6 合并 · 零间隙假切口】combat_005 的 source_end 与 combat_006 的 source_start 本就都是 517.5，源上完全连续，却在程序上硬切了一刀——这是**纯多余切口**，视觉上会闪一下。两场的结果（512 / 549）之间只有收尾，合并为源 [495.0, 561.2]。唯一保留的挖除是结果(549)之后的全屏大地图 [554.2, 555.62)。",
+      "event_types": [
+        "downed",
+        "escape",
+        "kill",
+        "loot",
+        "multi_kill"
+      ],
+      "confidence": "high",
+      "complete": true,
+      "needs_review": false,
+      "excluded_inside": [
+        {
+          "start": 554.2,
+          "end": 555.62,
+          "category": "fullscreen_map",
+          "reason": "★【v3 · A2 洞两端外扩到实测边界】v2 挖的 `[554.3, 555.4)`（1.1 s）**落在真实开启窗的中间**：adv3 问题 A 实测全屏紫色大地图「龙隐洞天」+ 倒计时的真实开启窗 ≈ `[554.2, 555.55]`（约 1.32 s），v2 的洞左端**晚 0.1 s**、右端**早 0.15 s**，**洞完成度约 83 %**，残留 0.19 s 里有一个 **0.05 s 的幽灵帧（`P 254.100`）正好落在 cut 8 的第 0 帧** —— 即接缝右侧第一帧就是满屏全屏地图，新接缝读作「干净门洞帧 → 硬切 → 全屏地图 → 淡出 → 干净跑动」，**不自然**。v3 改为 **`[554.2, 555.55)`（1.35 s，洞完成度 100 %）**，把地图的淡入起手与淡出收尾一起吃掉。挖洞判据不变：**不是收束环节的任何一步** —— 收束②要的是「舔包/背包面板打开帧 + 关闭后首干净帧」，全屏大地图是**导航工具**不是收束行为，按规约不得留在战斗/收束里。**对照保留不挖**：源 553.3–553.9 那 0.6 s 的魂玉/背包面板**保留**（adv3 实测开在 553.2、关在 553.4，约 0.2 s，方向对 v2 更有利）—— 它正是收束第②步的「打开帧」，与全屏大地图性质不同，两者必须区别对待。挖掉地图后，收束链在节目里读作「549 击杀 → 553.3 开包 → 553.9 关包 → 554.2 首干净帧 → （1.35 s 导航图被挖掉）→ 555.57 洞后首干净帧 → 555.6–561.2 跑路」，中间不再插一张全屏导航图。",
+          "evidence": [
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adjudicate_b\\w2f_panelfine\\sheets\\pf_01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adjudicate_b\\w2_c6panel\\sheets\\2__01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\seg7\\hd\\t0553.0.jpg"
+          ]
+        }
+      ],
+      "notes": "【v6】由 combat_005 + combat_006 合并为一场完整战斗。合并前的分界会把「拉出战场 → 打药/补给 → 再进场」这一整个过程从中间断开，视觉上就像「东切一段」。合并后本场在程序上是**一段连续画面**，不再有任何中途切点。合并前各场的原始记录见 merge_decision_v5.md。",
+      "evidence": {
+        "merged_from": [
+          "combat_005",
+          "combat_006"
+        ]
+      }
+    },
+    {
+      "id": "combat_007",
+      "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+      "source_start": 598.25,
+      "source_end": 685.0,
+      "engage_start": 602.0,
+      "impact_points": [
+        602.0,
+        606.0,
+        613.0,
+        616.0,
+        619.0,
+        632.0,
+        635.0,
+        640.0,
+        642.0,
+        648.0,
+        650.0,
+        651.0,
+        654.0,
+        657.0,
+        660.0,
+        665.0,
+        667.0,
+        668.0,
+        669.0,
+        670.0,
+        671.0,
+        676.0,
+        677.0,
+        679.0,
+        680.0,
+        683.0
+      ],
+      "outcome_time": 670.0,
+      "boundary_reason": "【v6】保持独立。v5 已取消全部战斗中挖除，仅保留结果(670)之后的面板 [678.6, 679.6)。后续探测：下一场的头之间源 685–718.5（33.5 s）全是闲聊与走位（语音 688–709「这东西还方便的」、710–715「加拿大玩匕首太爽了」），**不是续战**，不合并。",
+      "event_types": [
+        "downed",
+        "escape",
+        "loot",
+        "parry",
+        "team_save",
+        "ultimate"
+      ],
+      "confidence": "high",
+      "complete": true,
+      "needs_review": false,
+      "excluded_inside": [
+        {
+          "start": 678.6,
+          "end": 679.6,
+          "category": "ui_panel_enhance",
+          "reason": "★【v3 · A5 新增洞 3 / 3】0.9 s。**「选择强化」三卡 + 四列背包 + 银两 6750 的全屏面板，**插在交战正中间**（adv5 问题 P-1）。实测窗 `P 339.70–340.45 = S 678.70–679.45`；adv5 用 10 fps 逐帧（`r5_01.jpg`）读出完整时序：`339.2 / 339.3 / 339.4 / 339.5 / 339.6` 是**干净交战帧**（白红衣角色持刀、金色刀光、**上方有敌方红色血条**、左上角连击计数徽章）→ `339.7` 面板开始展开 → `339.8–340.3` 面板全开（三张大卡占画面中央 + 四列 + 银两 6750，覆盖约 3/4 画面）→ `340.4` 面板淡出（世界重新透出，**仍见敌方红血条**）→ `340.5` 面板关闭、干净交战帧。净时长 ≈0.75 s。v3 取略宽于实测的 `[678.6, 679.5)` 以确保淡入淡出一起吃掉。**判据：非收束环节的静态全屏面板 + 洞两侧邻帧都是战斗动作。**洞两侧邻帧：**前 `S 678.65`（`P 339.2–339.6`）有敌方红血条 + 刀光**、**后 `S 679.50`（`P 340.5`）仍是干净交战帧**（adv5 原文：「`340.4` 面板淡出，世界重新透出，仍见敌方红血条」）→ 硬门槛满足。⚠ **注意与本场收束②的界分**：adv4 §5 重点点④ 明确本场收束②的面板开帧是 `P 338.2–338.4` 与 `P 339.7–340.5`（源 677.2、678.7–679.5），且它**把 341.2（源 680.0）定为首干净帧** —— 即 adv4 认为这一段面板就是收束②的「打开帧」、按 §6-6「按 v2 声明保留」不报；而 adv5 从「插在交战正中间、前后两帧都有敌方红血条」判它是残留。**两条结论正面冲突，v3 按指挥处方 A5 采信 adv5（挖）**，理由：① adv5 的逐帧时序证明**面板在 678.70 才开、679.45 已关**，即**面板的开与关都落在 outcome（670.0）之后 8.7 s，而紧邻两侧（678.65 / 679.50）都是带敌方红血条与刀光的交战帧** —— 收束②的「开→关→首干净帧」三要素在这里**只剩中间的「关」**，两端都还打着，在规约上更接近「战斗中切走」而非「收束环节」；② 本场的收束②另有 676–679 之外的完整主链（676/677/679 UI 开 → 680.0 首干净帧 → 680–684 跑路），少这一处 0.9 s 不影响②的成立；③ **该冲突已如实登记在 `merge_decision_v3.md` §5.5**，请复验按本条核对，不按 adv4 §6-6 判「不该挖」。",
+          "evidence": [
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adv2r5\\sheets\\r5_01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adv2r5\\sheets\\b1_01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adv2r5\\sheets\\a1_01.jpg"
+          ]
+        }
+      ],
+      "notes": "【v6】由 combat_007 合并为一场完整战斗。合并前的分界会把「拉出战场 → 打药/补给 → 再进场」这一整个过程从中间断开，视觉上就像「东切一段」。合并后本场在程序上是**一段连续画面**，不再有任何中途切点。合并前各场的原始记录见 merge_decision_v5.md。",
+      "evidence": {
+        "merged_from": [
+          "combat_007"
+        ]
+      }
+    },
+    {
+      "id": "combat_008",
+      "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+      "source_start": 718.5,
+      "source_end": 810.0,
+      "engage_start": 731.0,
+      "impact_points": [
+        731.0,
+        732.0,
+        733.0,
+        734.0,
+        739.0,
+        743.0,
+        749.0,
+        753.0,
+        755.0,
+        766.0,
+        768.0,
+        769.0,
+        774.0,
+        776.0,
+        779.0,
+        780.0,
+        781.0,
+        792.0,
+        796.0,
+        797.0
+      ],
+      "outcome_time": 796.5,
+      "boundary_reason": "【v6】保持独立。后续探测：源 810–894（84 s）为交易 + 补给 + 导航，内容为「去买点东西去」「等下补充一下物资」，属于**战场之间的一段资货补给**，不属于任何一场战斗的连续性，故不合并（否则要把 84 s 商城市场塞进战斗里）。\n保留结果(796.5)之后的尾部面板 [798.35, 810.0)。",
+      "event_types": [
+        "boss",
+        "downed",
+        "kill",
+        "loot",
+        "multi_kill",
+        "parry",
+        "ultimate"
+      ],
+      "confidence": "high",
+      "complete": true,
+      "needs_review": false,
+      "excluded_inside": [
+        {
+          "start": 798.35,
+          "end": 810.0,
+          "category": "vendor_and_loot",
+          "reason": "★【v3 · A7 洞起点由 799.0 前移到 797.9】自审 v2 大修 D6 + adv5 问题 P-2 **两路独立实测**：**四栏面板（货币 19048）的真实开启窗 ⊂ `S (797.9, 798.7]`**，**比 v2 假设的 799.0 早约 1.1 s**。adv5 用 10 fps 逐帧 + 原生 1280x720 单帧（`P = 406.104`，`r2_full406.jpg`，页签与结构逐字可读：`任务｜背包｜地图`、强化背包 5 格、魂玉背包 6 项、道具背包 12 格、`19048` 银两、拾取预设：开、武器背包 3 把 + `53/60`）测得 `406.0 / 406.1 / 406.2 = S 796.85 / 796.95 / 797.05` 面板开、`406.3` 起干净；**第二段 `407.4 / 407.6 / 407.8 / 408.0 = S 798.25–799.00` 面板再次开启并一直开到 v2 的切口**。自审 D6 从另一路（640×360 定帧）测得窗口 ⊂ `(797.9, 798.7]`，`406.5 / 407.0 / 408.0` 均已关。两路取并集后 v3 取 **797.9**（比自审的 798.0 再早 0.1 s，比 adv5 首批实测的 798.25 早 0.35 s，以确保 `406.0 = S 796.85…` 那一段也被吃掉 —— 否则 `[797.9, 798.25)` 之间的 0.35 s 残留仍在节目里）。**⚠ 必须一并登记的后果（三项）**：① v2 的洞把面板的**关闭帧也挖走了** ⇒ **收束第②步在节目上彻底不成立**（不只是 v2 登记的「半满足/开帧被挖」）；② 收束第③步「连续纯跑路」由 1.5 s 缩到 **≈0.5 s**（`S 797.5–797.9`），**②③ 一起并入例外 E4**；③ **可见尾窗 = 1.4 s**（`796.5 → 797.9`；声明的 13.5 s 中 12.1 s 已被本洞挖除）—— 详见 `notes` 的 B5 段。**洞判定本身不变**：本段是 outcome 之后的背包装备与跑路段（源 798 起已重开背包做「护甲回复」+ `0.4 恢复` 读条 + 地面一具俯卧人形，敌方已全灭故判为尸体），挖掉的收益是可量化的：挖掉后观众从 796.5 的第 4 条播报直接进 796.5→797.9 的干净跑路与下一场滑翔开场，**不会看到一段 12.1 s 的开包 + 跑图死重**。",
+          "evidence": [
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\selfaudit_v2\\3_sheets\\hd_tails_01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\selfaudit_v2\\2b_sheets\\r2c008b_01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adv2r5\\r2_full406.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adv2r5\\sheets\\r6_01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adv2r5\\sheets\\r4_01.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adjudicate_a\\d_tail\\f0799.0.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\adjudicate_a\\hd1080\\t0800.0.jpg",
+            "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\shots\\seg10\\verify\\sheets\\post_01.jpg"
+          ]
+        }
+      ],
+      "notes": "【v6】由 combat_008 合并为一场完整战斗。合并前的分界会把「拉出战场 → 打药/补给 → 再进场」这一整个过程从中间断开，视觉上就像「东切一段」。合并后本场在程序上是**一段连续画面**，不再有任何中途切点。合并前各场的原始记录见 merge_decision_v5.md。",
+      "evidence": {
+        "merged_from": [
+          "combat_008"
+        ]
+      }
+    },
+    {
+      "id": "combat_009",
+      "source": "E:\\PR导出\\864永劫无间 2026-09-30 02-57-13.mp4",
+      "source_start": 894.0,
+      "source_end": 1127.45,
+      "engage_start": 898.0,
+      "impact_points": [
+        911.0,
+        916.0,
+        917.0,
+        918.0,
+        919.0,
+        921.0,
+        922.0,
+        925.0,
+        927.0,
+        930.0,
+        934.0,
+        935.0,
+        939.0,
+        943.0,
+        950.0,
+        954.0,
+        955.0,
+        956.0,
+        958.0,
+        959.0,
+        960.0,
+        967.0,
+        968.0,
+        974.0,
+        976.0,
+        977.0,
+        978.0,
+        981.0,
+        984.0,
+        985.0,
+        993.0,
+        997.0,
+        999.0,
+        1007.0,
+        1008.0,
+        1010.0,
+        1011.0,
+        1013.0,
+        1014.0,
+        1019.0,
+        1021.0,
+        1022.0,
+        1024.0,
+        1058.0,
+        1060.0,
+        1064.0,
+        1068.0,
+        1069.0,
+        1070.0,
+        1071.0,
+        1072.0,
+        1080.0,
+        1084.0,
+        1088.0,
+        1089.0,
+        1090.0,
+        1095.0,
+        1097.0,
+        1098.0,
+        1099.0,
+        1100.0,
+        1115.9,
+        1121.7,
+        1122.5,
+        1123.8,
+        1127.4
+      ],
+      "outcome_time": 1122.5,
+      "boundary_reason": "【v6 合并 · 终局连续战】三场为同一段连续交战，两次分界都切在战斗中间。\n【分界A：commbat_010 的头】间隙源 943–949（6 s）为跑动，但 **948 帧敌方红名条已在屏**（体验见 shots\\cmd_gaps_sheet.jpg C 组）——下一场的对手揭先了 1 秒就被切走。\n【分界B：combbat_011 的头】间隙源 1037–1043（6 s）内语音 **1041.10「我来了」= 战斗续接**；1037 属于 combat_010 的救众尾（语音 1024「我来拉药」）。\n【v5 已修正的部分】combat_009 的头回到 894（恢复了 v1„v4 整场删掉的 896–908 战斗）、combat_011 的头回到 1043（补回 1046–1049 交战）、combat_010 的接战点改为 953。\n合并后本场 = 源 [894.0, 1127.45]，**程序上是一段 233 s 的连续画面**，内含「打开一场整战 → 杀了 → 来看包 → 再打 → 救众 → 又有敌人 → 团毁125」的完整因果链。零任何中途切点、零任何挖除。",
+      "event_types": [
+        "downed",
+        "escape",
+        "kill",
+        "loot",
+        "multi_kill",
+        "settlement",
+        "ultimate"
+      ],
+      "confidence": "high",
+      "complete": true,
+      "needs_review": false,
+      "excluded_inside": [],
+      "notes": "【v6】由 combat_009 + combat_010 + combat_011 合并为一场完整战斗。合并前的分界会把「拉出战场 → 打药/补给 → 再进场」这一整个过程从中间断开，视觉上就像「东切一段」。合并后本场在程序上是**一段连续画面**，不再有任何中途切点。合并前各场的原始记录见 merge_decision_v5.md。",
+      "evidence": {
+        "merged_from": [
+          "combat_009",
+          "combat_010",
+          "combat_011"
+        ]
+      }
+    }
+  ],
+  "deleted_intervals": [
+    {
+      "start": 0.0,
+      "end": 181.0,
+      "category": "traversal_loot_ui"
+    },
+    {
+      "start": 266.5,
+      "end": 320.27,
+      "category": "traversal_loot_ui"
+    },
+    {
+      "start": 345.0,
+      "end": 357.0,
+      "category": "traversal_loot_ui"
+    },
+    {
+      "start": 444.0,
+      "end": 495.0,
+      "category": "traversal_loot_ui"
+    },
+    {
+      "start": 561.2,
+      "end": 598.25,
+      "category": "traversal_loot_ui"
+    },
+    {
+      "start": 685.0,
+      "end": 718.5,
+      "category": "traversal_loot_ui"
+    },
+    {
+      "start": 810.0,
+      "end": 894.0,
+      "category": "traversal_loot_ui"
+    },
+    {
+      "start": 1127.45,
+      "end": 1152.233,
+      "category": "outro_post_match"
+    }
+  ],
+  "v3_change_summary": "v3 = v2 + change_order_v3.md。A 组 10 条全部落地：combat_004.source_start 416.7→416.99（4K 帧 417.0 仍开四栏面板，后移是安全方向；validate 判据 start<engage 严格小于，故取 416.99 而非 417.0）；combat_006 挖洞 [554.3,555.4)→[554.2,555.55)（洞两端外扩到实测边界，洞完成度 83%→100%）；combat_006.source_end 562.0→561.2（v2 尾界停在开着的背包面板上；代价 = 尾窗降为 12.2 s，新增例外 E13）；combat_007.source_start 598.0→598.25 并改写 boundary_reason（598.0 已干净之说法被 adv4 R3-1 帧级证伪）；combat_007 新增 3 处挖洞 [626.4,627.4)/[630.7,632.4)/[678.6,679.5)（连同原有 [659.5,661.2) 共 4 条）；combat_008 新增 [756.2,757.0)，尾洞 [799.0,810.0)→[797.9,810.0)；combat_009.engage_start 916.0→911.0、combat_010.engage_start 954.0→949.0（均只改标注、不动边界）。B 组 7 条文字登记全部落地。★两处对处方的必要偏离（均由 validate 硬门禁强制，已在 merge_decision_v3.md §1.1 逐条说明）：① 处方只提示 combat_004 一处 start==engage 会 FAIL，实跑证明 combat_009/combat_010 同型同罪，三场一律取 source_start = engage_start − 0.01（910.99 / 948.99），连带把删除段 [810,911)→[810,910.99)、[943,949)→[943,948.99)、[404,417)→[404,416.99)；② 处方写「洞总数 9 处、渲染切口 21 个」，实跑为 10 处 / 20 个（处方漏数了 combat_011 的 [1100.75,1115.97) 这一处洞，且漏算 combat_008 尾洞右端正好等于段尾、不产生新切口）。段数 11、删除段 11 条、deleted+episodes 仍精确铺满 [0,1152.233] 零缝零重叠。段内挖洞 6 处 44.92 秒 → 10 处 50.67 秒；raw_span 632.25 → 630.93；节目总秒 587.33 → 580.26。全部 needs_review = false。",
+  "v3_geometry": {
+    "computed_by": "episode_geometry.timeline_program_seconds (未手算)",
+    "raw_span_seconds": 630.93,
+    "excluded_inside_hole_count": 10,
+    "excluded_inside_seconds": 50.67,
+    "render_cut_segments": 20,
+    "cut_segments": [
+      [
+        181.0,
+        229.0
+      ],
+      [
+        234.0,
+        266.5
+      ],
+      [
+        305.0,
+        345.0
+      ],
+      [
+        357.0,
+        404.0
+      ],
+      [
+        416.99,
+        444.0
+      ],
+      [
+        495.0,
+        517.5
+      ],
+      [
+        517.5,
+        554.2
+      ],
+      [
+        555.55,
+        561.2
+      ],
+      [
+        598.25,
+        626.4
+      ],
+      [
+        627.4,
+        630.7
+      ],
+      [
+        632.4,
+        659.5
+      ],
+      [
+        661.2,
+        678.6
+      ],
+      [
+        679.5,
+        685.0
+      ],
+      [
+        726.0,
+        756.2
+      ],
+      [
+        757.0,
+        781.0
+      ],
+      [
+        791.9,
+        797.9
+      ],
+      [
+        910.99,
+        943.0
+      ],
+      [
+        948.99,
+        1037.0
+      ],
+      [
+        1053.0,
+        1100.75
+      ],
+      [
+        1115.97,
+        1127.45
+      ]
+    ],
+    "hole_problems": [],
+    "tile_count": 22,
+    "coverage": "[0.0, 1152.233] 零缝零重叠（22 tiles 严格相接）"
+  },
+  "v4_change_summary": {
+    "source_of_truth": "reports/change_order_v4.md",
+    "issue_list": "reports/issue_list_v3.md",
+    "numeric_changes": [
+      "combat_002 source_start 305.0->320.27, engage_start 310.0->333.0, impact_points -314.0 -318.0, deleted_interval end 305.0->320.27",
+      "combat_006 hole [554.2,555.55)->[554.2,555.62)",
+      "combat_007 NEW hole [624.0,624.3)",
+      "combat_007 hole [678.6,679.5)->[678.6,679.6)",
+      "combat_008 hole [756.2,757.0)->[755.25,757.0)",
+      "combat_008 hole [781.0,791.9)->[779.95,791.9)",
+      "combat_008 hole [797.9,810.0)->[798.35,810.0)  (NARROWED, +0.45 s recovered)"
+    ],
+    "annotation_only_changes": [
+      "combat_010 engage_start 949.0->953.0, impact_points 949.0->950.0 (adjudicate_v3_b: real no-contact run is 0.79 s, not 8.9 s)",
+      "combat_010 event_types: 'revive' removed (periodic recovery timer, player standing throughout)"
+    ],
+    "rejected_by_adjudication": [
+      "combat_010 P-01 8.9 s glide: NOT excavation - enemy purple+red bar pair already on screen at S 949.78",
+      "combat_010 P-02 20 s segment: NOT excavation - enemy bars/nameplates/damage numbers throughout; cutting mid-combat"
+    ],
+    "known_exception_registered_not_fixed": [
+      "combat_002 S 320.27-333.0 = 12.73 s still shows no visible engagement (adjudicator flagged out of scope)",
+      "combat_002 S 340.0 may be the player's own downed-view arm/leg, conflicting with the registered 'glide->escape' characterisation (needs independent evidence)",
+      "combat_008 panel 753.25-753.35 (0.117 s): hard threshold unmet (neighbour bars 4/12 px) and mid-combat",
+      "combat_004 source_start 416.99: value kept, documented rationale refuted (see merge_decision_v3.md C-01)"
+    ],
+    "evidence_caveat": "shots/segN/hd/*.jpg filenames carry a systematic +0.4667 s offset (commander-verified on t0417.0 and t0420.0). Every v4 boundary was derived by direct -ss extraction against the source, so none is affected."
+  },
+  "v4_geometry": {
+    "computed_by": "episode_geometry.timeline_program_seconds (not hand-computed)",
+    "raw_span_seconds": 615.66,
+    "excluded_inside_hole_count": 11,
+    "excluded_inside_seconds": 52.69,
+    "render_cut_segments": 21,
+    "cut_segments": [
+      [
+        181.0,
+        229.0
+      ],
+      [
+        234.0,
+        266.5
+      ],
+      [
+        320.27,
+        345.0
+      ],
+      [
+        357.0,
+        404.0
+      ],
+      [
+        416.99,
+        444.0
+      ],
+      [
+        495.0,
+        517.5
+      ],
+      [
+        517.5,
+        554.2
+      ],
+      [
+        555.62,
+        561.2
+      ],
+      [
+        598.25,
+        624.0
+      ],
+      [
+        624.3,
+        626.4
+      ],
+      [
+        627.4,
+        630.7
+      ],
+      [
+        632.4,
+        659.5
+      ],
+      [
+        661.2,
+        678.6
+      ],
+      [
+        679.6,
+        685.0
+      ],
+      [
+        726.0,
+        755.25
+      ],
+      [
+        757.0,
+        779.95
+      ],
+      [
+        791.9,
+        798.35
+      ],
+      [
+        910.99,
+        943.0
+      ],
+      [
+        948.99,
+        1037.0
+      ],
+      [
+        1053.0,
+        1100.75
+      ],
+      [
+        1115.97,
+        1127.45
+      ]
+    ],
+    "tile_count": 22,
+    "coverage": "[0.0, 1152.233] 零缝零重叠（22 tiles 严格相接）",
+    "hole_problems": [],
+    "tile_note_v4": "v4 增加了 combat_007 新坑 [624.0,624.3)，所以 tile_count / coverage 字段沿用 v3 快照，需重计才准（影响零者：validate 与门禁均不读这三个键，角色 B 已独立枚举推得「22 块 / 43 块两种划分均 0 缝 0 重叠」，不构成门禁风险）。",
+    "lead_in_note": "combat_002 lead_in 由 v3 的 5.0 s 增至 12.73 s（该段内无可见交战）。已登记为待复核项，本轮不再改数值。"
+  },
+  "v5_change_summary": {
+    "governing_rule": "User correction 2026-10-01: in this game the loot / equipment / enhance / soul-jade panels ARE combat content (mid-fight looting, weapon swap, restock, jade pickup are normal tactical beats). A retained fight must be ONE unbroken piece. Panels are only excised AFTER the outcome.",
+    "rule_change": {
+      "mid_fight_holes_dropped": [
+        [
+          "combat_001",
+          229.0,
+          234.0,
+          5.0
+        ],
+        [
+          "combat_007",
+          626.4,
+          627.4,
+          1.0
+        ],
+        [
+          "combat_007",
+          630.7,
+          632.4,
+          1.7
+        ],
+        [
+          "combat_007",
+          659.5,
+          661.2,
+          1.7
+        ],
+        [
+          "combat_007",
+          624.0,
+          624.3,
+          0.3
+        ],
+        [
+          "combat_008",
+          755.25,
+          757.0,
+          1.75
+        ],
+        [
+          "combat_008",
+          779.95,
+          791.9,
+          11.95
+        ],
+        [
+          "combat_011",
+          1100.75,
+          1115.97,
+          15.22
+        ]
+      ],
+      "mid_fight_seconds_recovered": 38.62,
+      "post_outcome_holes_kept": [
+        [
+          "combat_006",
+          554.2,
+          555.62,
+          1.42
+        ],
+        [
+          "combat_007",
+          678.6,
+          679.6,
+          1.0
+        ],
+        [
+          "combat_008",
+          798.35,
+          810.0,
+          11.65
+        ]
+      ]
+    },
+    "boundary_fixes": [
+      "combat_008 source_start 726.0 -> 718.5 (v4 head landed mid-glide, sky-only frame)",
+      "combat_009 source_start 910.99 -> 894.0, engage_start 911.0 -> 898.0 (RESTORES a deleted fight)",
+      "combat_011 source_start 1053.0 -> 1043.0, engage_start 1058.0 -> 1046.0 (recovers 1046-1049 engagement)",
+      "combat_002 engage_start 333.0 -> 320.3 (adjudicator's own HUD-appears frame)"
+    ],
+    "deleted_intervals_moved": [
+      "[810.0, 910.99) -> [810.0, 894.0)",
+      "[1037.0, 1053.0) -> [1037.0, 1043.0)"
+    ],
+    "swallowed_fight_found_by": "Commander transcript sweep of all 11 deleted intervals for combat vocabulary, then 4K frame verification. 7 adversarial routes + 4-pass self-audit + 3 acceptance rounds had all missed it: they checked whether what was KEPT was correct, never whether anything wrongly DELETED was in a deleted interval."
+  },
+  "v5_geometry": {
+    "computed_by": "episode_geometry.timeline_program_seconds (not hand-computed)",
+    "raw_span_seconds": 650.15,
+    "excluded_inside_hole_count": 3,
+    "excluded_inside_seconds": 14.07,
+    "render_cut_segments": 13,
+    "cut_segments": [
+      [
+        181.0,
+        266.5
+      ],
+      [
+        320.27,
+        345.0
+      ],
+      [
+        357.0,
+        404.0
+      ],
+      [
+        416.99,
+        444.0
+      ],
+      [
+        495.0,
+        517.5
+      ],
+      [
+        517.5,
+        554.2
+      ],
+      [
+        555.62,
+        561.2
+      ],
+      [
+        598.25,
+        678.6
+      ],
+      [
+        679.6,
+        685.0
+      ],
+      [
+        718.5,
+        798.35
+      ],
+      [
+        894.0,
+        943.0
+      ],
+      [
+        948.99,
+        1037.0
+      ],
+      [
+        1043.0,
+        1127.45
+      ]
+    ],
+    "fights_are_unbroken": "Every retained fight is now a single contiguous program run; the only remaining holes sit strictly AFTER their episode's outcome_time."
+  },
+  "v6_geometry": {
+    "computed_by": "episode_geometry.timeline_program_seconds (not hand-computed)",
+    "raw_span_seconds": 675.13,
+    "excluded_inside_hole_count": 3,
+    "excluded_inside_seconds": 14.07,
+    "render_cut_segments": 9,
+    "cut_segments": [
+      [
+        181.0,
+        266.5
+      ],
+      [
+        320.27,
+        345.0
+      ],
+      [
+        357.0,
+        444.0
+      ],
+      [
+        495.0,
+        554.2
+      ],
+      [
+        555.62,
+        561.2
+      ],
+      [
+        598.25,
+        678.6
+      ],
+      [
+        679.6,
+        685.0
+      ],
+      [
+        718.5,
+        798.35
+      ],
+      [
+        894.0,
+        1127.45
+      ]
+    ],
+    "episodes": 7,
+    "every_fight_is_one_unbroken_run": true,
+    "note": "v6 rule: a fight = first engagement to last one against the same group, INCLUDING every tactical pause (disengage / heal / panel / re-enter). No cut may fall inside. Holes survive only strictly AFTER outcome_time."
+  }
+}

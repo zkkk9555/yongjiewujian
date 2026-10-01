@@ -1,0 +1,290 @@
+{
+ "schema": "naraka-combat-roughcut-timeline/v1",
+ "coordinate_space": "PROGRAM SECONDS (verification view only, never rendered)",
+ "derived_from": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\combat_episodes_v3.json",
+ "program_map": "C:\\Project\\永劫无间\\123\\21.864永劫无间 2026-09-30 02-57-13\\timeline\\program_map_v3.json",
+ "program_seconds_total": 580.26,
+ "combat_episodes": [
+  {
+   "id": "combat_001#0",
+   "source_start": 0.0,
+   "source_end": 48.0,
+   "engage_start": 0.0,
+   "outcome_time": 48.0,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    181.0,
+    229.0
+   ]
+  },
+  {
+   "id": "combat_001#1",
+   "source_start": 48.0,
+   "source_end": 80.5,
+   "engage_start": 48.0,
+   "outcome_time": 80.5,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    234.0,
+    266.5
+   ]
+  },
+  {
+   "id": "combat_002#0",
+   "source_start": 80.5,
+   "source_end": 120.5,
+   "engage_start": 80.5,
+   "outcome_time": 120.5,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    305.0,
+    345.0
+   ]
+  },
+  {
+   "id": "combat_003#0",
+   "source_start": 120.5,
+   "source_end": 167.5,
+   "engage_start": 120.5,
+   "outcome_time": 167.5,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    357.0,
+    404.0
+   ]
+  },
+  {
+   "id": "combat_004#0",
+   "source_start": 167.5,
+   "source_end": 194.51,
+   "engage_start": 167.5,
+   "outcome_time": 194.51,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    416.99,
+    444.0
+   ]
+  },
+  {
+   "id": "combat_005#0",
+   "source_start": 194.51,
+   "source_end": 217.01,
+   "engage_start": 194.51,
+   "outcome_time": 217.01,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    495.0,
+    517.5
+   ]
+  },
+  {
+   "id": "combat_006#0",
+   "source_start": 217.01,
+   "source_end": 253.71,
+   "engage_start": 217.01,
+   "outcome_time": 253.71,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    517.5,
+    554.2
+   ]
+  },
+  {
+   "id": "combat_006#1",
+   "source_start": 253.71,
+   "source_end": 259.36,
+   "engage_start": 253.71,
+   "outcome_time": 259.36,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    555.55,
+    561.2
+   ]
+  },
+  {
+   "id": "combat_007#0",
+   "source_start": 259.36,
+   "source_end": 287.51,
+   "engage_start": 259.36,
+   "outcome_time": 287.51,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    598.25,
+    626.4
+   ]
+  },
+  {
+   "id": "combat_007#1",
+   "source_start": 287.51,
+   "source_end": 290.81,
+   "engage_start": 287.51,
+   "outcome_time": 290.81,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    627.4,
+    630.7
+   ]
+  },
+  {
+   "id": "combat_007#2",
+   "source_start": 290.81,
+   "source_end": 317.91,
+   "engage_start": 290.81,
+   "outcome_time": 317.91,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    632.4,
+    659.5
+   ]
+  },
+  {
+   "id": "combat_007#3",
+   "source_start": 317.91,
+   "source_end": 335.31,
+   "engage_start": 317.91,
+   "outcome_time": 335.31,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    661.2,
+    678.6
+   ]
+  },
+  {
+   "id": "combat_007#4",
+   "source_start": 335.31,
+   "source_end": 340.81,
+   "engage_start": 335.31,
+   "outcome_time": 340.81,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    679.5,
+    685.0
+   ]
+  },
+  {
+   "id": "combat_008#0",
+   "source_start": 340.81,
+   "source_end": 371.01,
+   "engage_start": 340.81,
+   "outcome_time": 371.01,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    726.0,
+    756.2
+   ]
+  },
+  {
+   "id": "combat_008#1",
+   "source_start": 371.01,
+   "source_end": 395.01,
+   "engage_start": 371.01,
+   "outcome_time": 395.01,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    757.0,
+    781.0
+   ]
+  },
+  {
+   "id": "combat_008#2",
+   "source_start": 395.01,
+   "source_end": 401.01,
+   "engage_start": 395.01,
+   "outcome_time": 401.01,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    791.9,
+    797.9
+   ]
+  },
+  {
+   "id": "combat_009#0",
+   "source_start": 401.01,
+   "source_end": 433.02,
+   "engage_start": 401.01,
+   "outcome_time": 433.02,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    910.99,
+    943.0
+   ]
+  },
+  {
+   "id": "combat_010#0",
+   "source_start": 433.02,
+   "source_end": 521.03,
+   "engage_start": 433.02,
+   "outcome_time": 521.03,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    948.99,
+    1037.0
+   ]
+  },
+  {
+   "id": "combat_011#0",
+   "source_start": 521.03,
+   "source_end": 568.78,
+   "engage_start": 521.03,
+   "outcome_time": 568.78,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    1053.0,
+    1100.75
+   ]
+  },
+  {
+   "id": "combat_011#1",
+   "source_start": 568.78,
+   "source_end": 580.26,
+   "engage_start": 568.78,
+   "outcome_time": 580.26,
+   "complete": true,
+   "needs_review": false,
+   "excluded_inside": [],
+   "from_source": [
+    1115.97,
+    1127.45
+   ]
+  }
+ ],
+ "deleted_intervals": []
+}
