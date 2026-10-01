@@ -1,8 +1,12 @@
 {
   "profile_name": "完整战斗粗剪",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "purpose": "先保证战斗完整性，再进行高燃成片包装",
   "mode": "complete_combat_roughcut",
+  "_changelog": [
+    "1.1.0 (2026-10-01, 864 六版被否后): 落 §2.2.1「一整场完整战斗」。delete_categories 的 looting 收窄为 between_battles；新增 whole_battle 块；顺带修正与散文漂移的 outcome_hold/recovery_tail（4/3 -> 8/5，散文 e2 升级时漏改此处）。",
+    "1.0.0 初版"
+  ],
   "selection": {
     "unit": "combat_episode",
     "event_types": [
@@ -19,18 +23,70 @@
     "lead_in_seconds": 5,
     "internal_gap_seconds": 8,
     "rejoin_window_seconds": 12,
-    "outcome_hold_seconds": 4,
-    "recovery_tail_seconds": 3,
+    "_rejoin_window_note": "这是 STARTING VALUE，不是判据。864 反例：0 秒间隙该合并（源上本就连续，硬切一刀纯多余）、12.99 秒间隙也该合并（拉开+补给+再进场）、84 秒间隙不该合并（战场之间的商城补给）。判据是「战斗是否延续」，须逐帧核实间隙内容，不是秒数。见 references/complete-combat-roughcut.md §2.2.1 R3。",
+    "outcome_hold_seconds": 8,
+    "recovery_tail_seconds": 5,
     "preserve_event_context": true,
     "require_outcome_before_cut": true,
     "uncertain_boundary_policy": "keep_and_mark_needs_review",
     "delete_categories": [
-      "looting",
-      "travel",
-      "waiting",
+      {
+        "name": "looting",
+        "_was": "864 前这里是裸字符串 \"looting\"，等于授权删掉任何舔包段",
+        "scope": "between_battles_only",
+        "never_delete_when": "在 (engage_start, outcome_time) 内 —— 战斗中舔包/换甲/拿魂玉/选法门是战术动作，属战斗内容本身（864 用户准则）"
+      },
+      {
+        "name": "travel",
+        "scope": "between_battles_only",
+        "never_delete_when": "在战斗中脱离交战去跑动/拉扯，属于这场战斗的一个环节"
+      },
+      {
+        "name": "waiting",
+        "scope": "between_battles_only",
+        "never_delete_when": "战斗中观察态势（用户原话：可能有二三十秒在观察，那也算战斗的一部分）"
+      },
       "repetition",
       "long_no_event"
     ]
+  },
+  "whole_battle": {
+    "_source": "864 用户反馈 2026-10-01（原件 docs/lessons/2026-10-01_864-审片反馈与教训.md）",
+    "_priority": "最高。864 连续 6 版被否的直接原因就是违反这一组规则。",
+    "definition": "一场完整战斗 = 对同一队（或那两三队）敌人的第一次接战，到最后一次交战结束。中间的每一次战术停顿都属于这场战斗。",
+    "judgement_is": "causal_chain",
+    "judgement_is_not": [
+      "ui_element_type",
+      "gap_seconds",
+      "has_combat_action"
+    ],
+    "tactical_pauses_to_keep": [
+      "拉开距离",
+      "脱离战场",
+      "打药/补血",
+      "舔包",
+      "换武器/换甲",
+      "拿魂玉",
+      "选法门",
+      "重新进场",
+      "长时间观察态势"
+    ],
+    "splits_into_new_battle_only_when": [
+      "换了对手",
+      "真正的场景/时间断裂（去城镇交易、结算界面）"
+    ],
+    "rules": {
+      "R2-1": "(engage_start, outcome_time) 内不允许任何 excluded_inside —— 战术停顿要包含进来，不是挖掉",
+      "R2-2": "相邻两场若战斗流程延续必须合并，间隙哪怕 6 秒也要包含 —— 洞清光了不等于战斗没被切断，场边界本身也在切",
+      "R2-3": "excluded_inside 只允许出现在 outcome_time 之后（结果后的大地图/结算面板）或 engage_start 之前（前置跑图）"
+    },
+    "merge_criterion": "逐帧核实间隙内容（拉开/打药/舔包/换装/跑动/重新进场 -> 合并；换了对头/跑图/闲聊 -> 分开；去城镇交易/结算/复活 -> 分开）",
+    "diagnostic_ultimate_already_firing": "若入片时已处于开大/技能释放进行中 -> 前置战斗很可能被删了 -> 立即回查该场 source_start 之前",
+    "gates": {
+      "G-1": "战斗中零挖洞：(engage_start, outcome_time) 内的 excluded_inside 条数必须 = 0",
+      "G-2": "零间隙假切口：相邻两场的 source_end 与下一场 source_start 不得相等",
+      "G-7": "例外必须有量化授权上限，实测超出即 FAIL（例外 = 授权额度，不是免检牌）"
+    }
   },
   "review": {
     "default_resolution": "1280x720",
@@ -39,7 +95,9 @@
     "bgm": false,
     "decorative_effects": false,
     "require_gap_audit": true,
-    "require_full_decode_check": true
+    "require_full_decode_check": true,
+    "require_deleted_interval_audit": true,
+    "_require_deleted_interval_audit_note": "864 §4.1：7 路对抗审 + 4 遍自审 + 3 路验收，全部只查保留区间，没有任何一份任务书要求查被删掉的区间 —— 漏掉的那场战斗就躺在删除段里，reason 写得再详尽也没人用独立信号交叉验证。删除段审计员是独立角色，见 references/roughcut-launch.md。"
   },
   "delivery": {
     "preview_first": true,

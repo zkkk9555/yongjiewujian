@@ -199,6 +199,45 @@ C:\Project\永劫无间\skills\naraka-highlight-studio\SKILL.md
 
 e系列升级索引（只索引不展开）：防漏扫e1 / 防中断尾e2 见 skill 内 `references/complete-combat-roughcut.md`（参数与尾窗升级）；预览对抗审e3 / 极限并行e4 / 冻结门禁2.0 e5 见 skill 内 `references/roughcut-launch.md §2/§3.6/§3.7` 与 `references/deliverables-and-qa.md` 门禁节；设计原稿见 `123\workflow_upgrade\e1-e5`，合入记录见 `123\workflow_upgrade\merge_log_e.md`。零星合并g见 skill 内 `references/roughcut-launch.md §2.8`（岛式合并/搭桥/单裁决/三态台账）；设计原稿见 `123\workflow_upgrade\g-shard-merge.md`，合入记录见 `123\workflow_upgrade\merge_log_g.md`。
 
+## 8.1 一整场完整战斗（2026-10-01 立，最高优先级判据）
+
+**用户原话**：「我想要记录一整场完整的战斗。不管中间我去干啥，可能去舔包了、打药了，或者去拉扯了……中间可能有二三十秒我都是在观察的状态，其实那也算战斗的一部分。**我不想中间有断断档的时间，因为一断之后，战斗就不连贯了，观看体验就会很差。**」
+
+三条硬规则（完整版与逐条实证见 `skills/naraka-highlight-studio/references/complete-combat-roughcut.md` §2.2.1）：
+
+1. **战斗窗口内不许挖洞** —— `(engage_start, outcome_time)` 内不允许任何 `excluded_inside`。战术停顿要**包含进来**，不是挖掉。
+2. **战斗窗口内不许切断** —— 相邻两场若战斗流程延续必须合并，间隙哪怕 6 秒也要包含。**洞清光了 ≠ 战斗没被切断，场边界本身也在切。**
+3. **洞只许落在窗口外** —— `excluded_inside` 只能出现在 `outcome_time` 之后（结果后的大地图／结算面板）或 `engage_start` 之前（前置跑图）。
+
+**判断一个面板删不删，看它在不在这场战斗的因果链里，不看它是不是面板、不看它几秒。**
+这条取代了旧口径「删：……全屏 UI（除属收束环节的）」——旧口径把战斗中舔包/打药面板判成待清除 UI，
+864 因此连续六版被用户否决。
+
+机器执行（`qa_gate.py`）：`no_holes_in_battle`（默认 WARN，时间线声明 `"whole_battle_policy": "864"` 转 FAIL）
+与 `no_zero_gap_pseudo_cuts`。回归测试 `scripts/test_whole_battle_gates.sh`。
+
+## 8.2 经验收纳机制（用户说「去收纳经验」就走这条）
+
+每局的经验照常写在任务目录 `reports\workflow_notes_<任务目录号>.md`，
+专题复盘写进 `docs\lessons\`。**汇总入口是 `docs\lessons\POOL.md`** —— 打开管理窗口看那一份就够。
+
+```powershell
+& 'C:\Project\永劫无间\scripts\collect_lessons.ps1'          # 扫描并打印待升级清单
+& 'C:\Project\永劫无间\scripts\collect_lessons.ps1' -Write   # 追加新候选到 POOL 的待升级表
+```
+
+脚本会报告：经验源清单、哪些已吸收、**哪些待升级**、覆盖率（几个任务目录缺 `workflow_notes`）、
+命名是否合规。
+
+**两条硬规矩**（否则池子会退化成摆设）：
+
+1. 每条吸收后**必须回填 POOL 的「吸收去向」列并把状态改成 `已吸收`**。没写去向的不算吸收。
+2. POOL 的「教训」列**以原文标题加粗开头**——那是脚本判断"是否已吸收"的机器锚点。
+
+**新增第 8 种审片角色：删除段审计员**（`roughcut-launch.md`）。
+864 §4.1 的教训：7 路对抗审 + 4 遍自审 + 3 路验收，**没有任何一份任务书要求过查被删掉的区间**，
+漏掉的那场战斗就躺在删除段里，而删除段的 `reason` 写得再详尽也不等于核验通过。每轮必须派一路。
+
 ## 9. 单次图片上限（全模型硬性红线，每轮持久有效，违者会话作废）
 
 无论使用什么模型（含 `muse-spark-1.3-contributor-free` 及任何后续模型），上游单次请求携带的图片总数上限都是 50 张，绝对不允许超过任何一张。超过后上游直接失败、当前会话无法继续，只能换新窗口，因此必须事前限流，且该约束在每次对话的每一轮都有效。

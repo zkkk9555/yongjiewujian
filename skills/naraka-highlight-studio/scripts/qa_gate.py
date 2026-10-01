@@ -142,6 +142,110 @@ def gate_in_segment_holes(episodes: list[dict], evidence: str) -> dict:
     return check("in_segment_holes", "PASS", f"{hole_count} holes well-formed", "holes inside episode, positive length, not the whole episode", evidence)
 
 
+def _battle_window(episode: dict) -> tuple[float, float] | None:
+    """Return ``(engage_start, outcome_time)`` when both ends are declared."""
+    start = episode.get("engage_start")
+    end = episode.get("outcome_time")
+    if start is None or end is None:
+        return None
+    try:
+        return float(start), float(end)
+    except (TypeError, ValueError):
+        return None
+
+
+def gate_no_holes_in_battle(episodes: list[dict], evidence: str, strict: bool = False) -> dict:
+    """G-1: no ``excluded_inside`` hole may fall inside the battle window.
+
+    864's six rejected versions all share this defect.  A tactical pause -- loot
+    a corpse, drink a potion, disengage and re-engage, pick a talent card -- is
+    *part of the fight*.  Punching it out is what made the cut feel chopped, and
+    the user said so outright: 「我不想中间有断断档的时间，因为一断之后，战斗就不连贯了」.
+
+    Holes outside the window stay legal: cleaning the post-outcome map screen or
+    the pre-engage travel run is exactly what they are for.  Task 864's accepted
+    v6 carries three such holes, all after ``outcome_time``.  So this gate judges
+    hole *position*, not hole *existence*.
+
+    Historical timelines carry holes here.  They are reported as WARN, not FAIL:
+    task 863's master is already delivered and its source MP4 has been deleted,
+    so "go back and re-cut it" is not an available instruction.  A timeline opts
+    in to FAIL by declaring ``"whole_battle_policy": "864"`` at the top level of
+    the timeline JSON (or on any single episode).
+    """
+    strict = strict or any(
+        str(ep.get("whole_battle_policy", "")) == "864" for ep in episodes
+    )
+    offenders: list[str] = []
+    unchecked = 0
+    for episode in episodes:
+        window = _battle_window(episode)
+        holes = episode.get("excluded_inside") or []
+        if window is None:
+            if holes:
+                unchecked += 1
+            continue
+        engage, outcome = window
+        for hole in holes:
+            try:
+                hole_start = float(hole["start"])
+                hole_end = float(hole["end"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if hole_start >= engage and hole_end <= outcome:
+                offenders.append(
+                    f"{episode.get('id', '?')} hole [{hole_start}, {hole_end}] "
+                    f"inside battle [{engage}, {outcome}]"
+                )
+    status = "FAIL" if (offenders and strict) else ("WARN" if offenders else "PASS")
+    if offenders:
+        measured = offenders[0] + (f" (+{len(offenders) - 1} more)" if len(offenders) > 1 else "")
+    elif unchecked:
+        measured = f"no in-battle holes; {unchecked} episode(s) lack engage_start/outcome_time and were not checked"
+        status = "WARN"
+    else:
+        measured = "no in-battle holes"
+    return check("no_holes_in_battle", status, measured, "0 holes inside (engage_start, outcome_time)", evidence)
+
+
+def gate_no_zero_gap_pseudo_cuts(episodes: list[dict], evidence: str) -> dict:
+    """G-2: adjacent episodes must not share a boundary second.
+
+    When one episode ends exactly where the next begins, the cut removes nothing
+    yet still puts a splice in the picture -- on task 864 ``combat_005`` and
+    ``combat_006`` were continuous on the source (both touching 517.5) and the
+    program still cut them apart, which reads as a visible flash.  Two continuous
+    stretches of one battle must be one episode.
+    """
+    offenders: list[str] = []
+    ordered = sorted(
+        (ep for ep in episodes if episode_bounds_present(ep)),
+        key=lambda e: float(e["source_start"]),
+    )
+    for previous, current in zip(ordered, ordered[1:]):
+        try:
+            previous_end = float(previous["source_end"])
+            current_start = float(current["source_start"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if abs(previous_end - current_start) < 1e-6:
+            offenders.append(
+                f"{previous.get('id', '?')} ends at {previous_end} == "
+                f"{current.get('id', '?')} starts; continuous on source but split in program"
+            )
+    status = "FAIL" if offenders else "PASS"
+    measured = (
+        offenders[0] + (f" (+{len(offenders) - 1} more)" if len(offenders) > 1 else "")
+        if offenders
+        else f"{len(ordered)} episodes, no zero-gap cuts"
+    )
+    return check("no_zero_gap_pseudo_cuts", status, measured, "adjacent source_end != next source_start", evidence)
+
+
+def episode_bounds_present(episode: dict) -> bool:
+    return "source_start" in episode and "source_end" in episode
+
+
 def run_probe(ffprobe: str | None, target: Path) -> dict | None:
     if not ffprobe or not target.is_file():
         return None
@@ -357,20 +461,36 @@ def main() -> int:
     )
     parser.add_argument("--proxy-map", type=Path)
     parser.add_argument("--source-duration", type=float)
+    parser.add_argument(
+        "--whole-battle-strict",
+        action="store_true",
+        help="Treat in-battle holes (G-1) as FAIL instead of WARN. Same as declaring \"whole_battle_policy\": \"864\" in the timeline JSON.",
+    )
     parser.add_argument("--ffprobe", type=str, default=None)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     checks: list[dict] = []
+    document: dict = {}
     try:
-        _, episodes = load_timeline(args.timeline)
+        document, episodes = load_timeline(args.timeline)
     except (OSError, ValueError) as exc:
         checks.append(check("load_timeline", "FAIL", str(exc), "parseable timeline", str(args.timeline)))
         episodes = []
+    # Opt-in to FAIL on G-1 via "whole_battle_policy": "864" at the top level of
+    # the timeline JSON.  Default is WARN so already-delivered work is reported
+    # without being declared non-compliant.
+    whole_battle_strict = (
+        isinstance(document, dict)
+        and str(document.get("whole_battle_policy", "")) == "864"
+    ) or args.whole_battle_strict
     if episodes:
         checks.append(gate_timeline_mutex(episodes, str(args.timeline)))
         checks.append(gate_source_range(episodes, args.source_duration, str(args.timeline)))
         checks.append(gate_in_segment_holes(episodes, str(args.timeline)))
+        # 864 用户准则：一场完整战斗，中间不许断。R2-1 管洞，R2-2 管场边界。
+        checks.append(gate_no_holes_in_battle(episodes, str(args.timeline), whole_battle_strict))
+        checks.append(gate_no_zero_gap_pseudo_cuts(episodes, str(args.timeline)))
         checks.append(gate_program_sum(episodes, args.program_map, str(args.timeline)))
     ffprobe = args.ffprobe or shutil.which("ffprobe")
     probe = run_probe(ffprobe, args.preview) if args.preview else None

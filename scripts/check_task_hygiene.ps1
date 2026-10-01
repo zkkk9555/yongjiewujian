@@ -102,6 +102,33 @@ if ($shotStray.Count -gt 0) {
     foreach ($f in $shotStray) { Write-Output ("  " + $f.FullName) }
 }
 
+# --- 6. 经验落盘：命名必须用任务目录号，缺失要报 --------------------------------
+# 这局学到了什么写在 reports\workflow_notes_<任务目录号>.md。命名过去混用过
+# 目录号和素材号（_849 / _15 / _863），collect_lessons.ps1 认不出来就没法判断
+# 某条是否已吸收，经验池会退化成摆设。
+#
+# 缺 notes 是 INFO 而不是 FAIL：并发扫描或简单渲染任务本来就没经验可写，
+# 判 FAIL 会制造大量噪声。真正要拦的是"写了但名字不对"——那份经验收不进池子。
+# 注意括号：写成 `Split-Path -Leaf $TaskDir -match '^...'` 会被 PowerShell 解析成
+# 把 -match 当参数名传给 Split-Path（ParameterBindingException），而那是非终止
+# 错误 —— 脚本会照常打印 PASS，整条检查被静默跳过。必须 (Split-Path ...) 包起来。
+$taskNum = ''
+if ((Split-Path -Leaf $TaskDir) -match '^(\d+)\.') { $taskNum = $Matches[1] }
+$reportsDir = Join-Path $TaskDir 'reports'
+$notesFiles = @(Get-ChildItem -LiteralPath $reportsDir -File -Filter 'workflow_notes*.md' -Force -ErrorAction SilentlyContinue)
+if ($notesFiles.Count -eq 0) {
+    Write-Output "[INFO-NOTES] reports\ has no workflow_notes*.md -- if this task learned anything, write it before the directory is archived"
+} elseif ($taskNum) {
+    $expected = "workflow_notes_$taskNum.md"
+    $badNames = @($notesFiles | Where-Object { $_.Name -ne $expected })
+    foreach ($f in $badNames) {
+        [void]$violations.Add(("NOTES_NAME:{0}  (应为 {1}，否则 collect_lessons.ps1 认不出这条经验)" -f $f.Name, $expected))
+    }
+    if ($badNames.Count -eq 0) {
+        Write-Output ("[INFO-NOTES] workflow notes present and correctly named: {0}" -f $expected)
+    }
+}
+
 # --- 汇总 ----------------------------------------------------------------------
 
 Write-Output ("Checks: root-loose/zero-byte/misplaced-timeline/stale-preview/stale-timeline (+shot-info)")

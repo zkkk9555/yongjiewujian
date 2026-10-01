@@ -16,6 +16,64 @@ from episode_geometry import (  # noqa: E402
 )
 
 
+def battle_window(episode: dict[str, Any]) -> tuple[float, float] | None:
+    """Return ``(engage_start, outcome_time)`` when both ends are declared."""
+    start = episode.get("engage_start")
+    end = episode.get("outcome_time")
+    if start is None or end is None:
+        return None
+    try:
+        return float(start), float(end)
+    except (TypeError, ValueError):
+        return None
+
+
+def collect_exceptions(episodes: list[dict], data: dict) -> list[dict]:
+    """Gather declared exceptions together with their authorised budget.
+
+    Two places may declare them, because both are used in practice:
+    per-episode (``exceptions: [{...}]``) and top-level (``exceptions: [...]``).
+    A recognised shape carries a category, an optional ``authorised_limit`` in
+    seconds, and something that can be measured -- either an explicit
+    ``measured_seconds`` or the ``interval`` it spans.
+    """
+    found: list[dict] = []
+
+    def absorb(items: Any, owner: str) -> None:
+        if not isinstance(items, list):
+            return
+        for raw in items:
+            if not isinstance(raw, dict):
+                continue
+            label = f"{owner}.{raw.get('category') or raw.get('kind') or 'exception'}"
+            budget_raw = raw.get("authorised_limit", raw.get("authorized_limit"))
+            try:
+                budget = float(budget_raw) if budget_raw is not None else None
+            except (TypeError, ValueError):
+                budget = None
+            measured_raw = raw.get("measured_seconds")
+            if measured_raw is None:
+                interval = raw.get("interval")
+                if isinstance(interval, (list, tuple)) and len(interval) == 2:
+                    try:
+                        measured_raw = float(interval[1]) - float(interval[0])
+                    except (TypeError, ValueError):
+                        measured_raw = None
+            try:
+                measured = float(measured_raw) if measured_raw is not None else None
+            except (TypeError, ValueError):
+                measured = None
+            if measured is None:
+                continue
+            found.append({"label": label, "measured": measured, "budget": budget})
+
+    absorb(data.get("exceptions"), "timeline")
+    for episode in episodes:
+        if isinstance(episode, dict):
+            absorb(episode.get("exceptions"), str(episode.get("id", "?")))
+    return found
+
+
 def as_float(value: Any, field: str) -> float:
     try:
         return float(value)
@@ -168,6 +226,53 @@ def main() -> int:
         checks.append({"name": "in_segment_holes_excavated", "pass": True, "excavated_seconds": round(raw_total - program_total, 3), "raw_span": raw_total, "hole_count": hole_count, "threshold": "informational: holes deducted from the program"})
     hole_problems = timeline_hole_problems(episodes)
     checks.append({"name": "in_segment_holes_valid", "pass": not hole_problems, "problems": hole_problems[:5], "threshold": "each hole inside its episode, positive length, not the whole episode (overlaps are merged, not rejected)"})
+
+    # G-1 at validate time as well as in qa_gate: report in-battle holes early,
+    # while the timeline is still being edited, instead of at freeze time.
+    in_battle = []
+    for item in episodes:
+        window = battle_window(item)
+        if window is None:
+            continue
+        engage, outcome = window
+        for hole in (item.get("excluded_inside") or []):
+            try:
+                hole_start = float(hole["start"])
+                hole_end = float(hole["end"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if hole_start >= engage and hole_end <= outcome:
+                in_battle.append(f"{item.get('id', '?')} hole [{hole_start}, {hole_end}] inside battle [{engage}, {outcome}]")
+    checks.append({
+        "name": "no_holes_in_battle",
+        "pass": not in_battle,
+        "in_battle_holes": len(in_battle),
+        "problems": in_battle[:5],
+        "threshold": "0 holes inside (engage_start, outcome_time) — 战术停顿要包含进来，不是挖掉（864 用户准则 §2.2.1 R2-1）",
+    })
+
+    # G-7: an exception is an authorised BUDGET, not an exemption card.
+    # 864 §4.2: combat_002's "前置跑图" was registered as an exception at v1 and
+    # every later round only re-checked "measured <= authorised".  When the
+    # measurement reached 15.27 s against a 5.0 s authorisation, the process fixed
+    # the seconds instead of declaring the exception refuted -- and the exception
+    # had by then acquired an unearned immunity.  Measured > authorised is FAIL.
+    over_budget = []
+    for exception in collect_exceptions(episodes, data):
+        label = exception["label"]
+        measured = exception["measured"]
+        budget = exception["budget"]
+        if budget is None:
+            over_budget.append(f"{label}: measured {measured}s with no authorised_limit declared")
+        elif measured > budget + 1e-6:
+            over_budget.append(f"{label}: measured {measured}s exceeds authorised limit {budget}s")
+    checks.append({
+        "name": "exception_within_authorised_limit",
+        "pass": not over_budget,
+        "exceptions": len(collect_exceptions(episodes, data)),
+        "problems": over_budget[:5],
+        "threshold": "每条例外必须带 authorised_limit 秒；实测超出即 FAIL（例外 = 授权额度，不是免检牌）",
+    })
 
     deleted_checks = check_deleted_intervals(data, episodes)
     if deleted_checks:
