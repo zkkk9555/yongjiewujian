@@ -216,6 +216,10 @@ e系列升级索引（只索引不展开）：防漏扫e1 / 防中断尾e2 见 s
 机器执行（`qa_gate.py`）：`no_holes_in_battle`（默认 WARN，时间线声明 `"whole_battle_policy": "864"` 转 FAIL）
 与 `no_zero_gap_pseudo_cuts`。回归测试 `scripts/test_whole_battle_gates.sh`。
 
+**门禁是必要条件，不是充分条件。** 这两条只覆盖「战斗被挖断」和「战斗被切断」两种失效模式。
+864 的 v6 在这两条上干净，但用户审片后说**它仍有问题、要整局重剪**——残留问题不在门禁射程内。
+**`qa_gate.py` 全绿之后仍然必须看片**，不要拿门禁通过当冻结依据。
+
 ## 8.2 经验收纳机制（用户说「去收纳经验」就走这条）
 
 每局的经验照常写在任务目录 `reports\workflow_notes_<任务目录号>.md`，
