@@ -306,6 +306,47 @@ if ($strays.Count -gt 0) {
     Add-Result 'PASS' 'no stray dirs beside project' ("{0} contains only the project" -f $ParentRoot)
 }
 
+# --- Project-root hygiene ----------------------------------------------------
+#
+# Two guards already exist and they cover DIFFERENT layers:
+#   * stray dirs beside project  -> C:\Project\*      (the parent)
+#   * task numbering             -> 123\<N>.*        (inside)
+#
+# Neither can see the project root's OWN contents.  On 2026-10-01 the root held:
+#   * bagY.txt   -- ffmpeg signalstats probe output, 48 frames of YAVG, written
+#                   by a redirect that should have gone to a task cache
+#   * Project\   -- an EMPTY directory: the "half-ASCII mojibake" residue that
+#                   task 863 had already warned about, happening again
+#
+# git saw neither: *.txt is gitignored, and git does not track empty directories
+# at all.  `git status` was completely clean while both sat there.
+#
+# WARN, not BLOCKER: neither breaks a roughcut.  Both are path-discipline
+# violations -- derived output belongs under 123\<N>.<material>, not the root.
+$AllowedRootFiles = @('AGENTS.md', 'IMAGE_LIMIT.md', 'README.md', '.gitignore', '.gitattributes')
+$rootStrayFiles = @(Get-ChildItem -LiteralPath $ProjectRoot -File -Force -ErrorAction SilentlyContinue |
+                    Where-Object { $AllowedRootFiles -notcontains $_.Name })
+$rootEmptyDirs = @(Get-ChildItem -LiteralPath $ProjectRoot -Directory -Force -ErrorAction SilentlyContinue |
+                   Where-Object { $_.Name -notin @('.git', '.video-tools', '123') } |
+                   Where-Object { @(Get-ChildItem -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue).Count -eq 0 })
+$pycacheDirs = @(Get-ChildItem -LiteralPath $ProjectRoot -Recurse -Directory -Force -Filter '__pycache__' -ErrorAction SilentlyContinue |
+                 Where-Object { $_.FullName -notlike '*\.video-tools\*' })
+
+if ($rootStrayFiles.Count -eq 0 -and $rootEmptyDirs.Count -eq 0 -and $pycacheDirs.Count -eq 0) {
+    Add-Result 'PASS' 'project root hygiene' ("only the {0} known files; no empty dirs; no bytecode caches" -f $AllowedRootFiles.Count)
+} else {
+    if ($rootStrayFiles.Count -gt 0) {
+        Add-Result 'WARN' 'project root hygiene' ("loose file(s) in the project root: " + (($rootStrayFiles | ForEach-Object { "$($_.Name) ($($_.Length) B)" }) -join ', '))
+    }
+    if ($rootEmptyDirs.Count -gt 0) {
+        Add-Result 'WARN' 'project root hygiene' ("empty directory/directories in the project root: " + (($rootEmptyDirs | ForEach-Object { $_.Name }) -join ', ') + " -- an empty 'Project' or similar means something wrote through a mangled path; task 863 recorded this exact case")
+    }
+    if ($pycacheDirs.Count -gt 0) {
+        Add-Result 'WARN' 'project root hygiene' ("python bytecode cache present (regenerable): " + (($pycacheDirs | ForEach-Object { $_.FullName.Substring($ProjectRoot.Length + 1) }) -join ', '))
+    }
+    Add-Result 'NOTE' 'project root hygiene' "git cannot see any of this: *.txt is gitignored and git does not track empty directories. Inspect each item before deleting; derived output belongs under 123\<N>.<material>\cache\."
+}
+
 # --- Legacy duplicate env --------------------------------------------------
 
 $legacyVenv = Join-Path $ProjectRoot '.video-venv'
