@@ -340,6 +340,32 @@ def is_cjk(text: str) -> bool:
     return any("\u4e00" <= ch <= "\u9fff" for ch in text)
 
 
+def subtitle_bounds(episode: dict[str, Any]) -> tuple[float, float]:
+    """Cut boundaries in the coordinate space the SRT lives in.
+
+    SRT timestamps are **program** time, so the cross-cut test has to compare
+    them against program boundaries.  It used to compare them against
+    ``episode_range()``, i.e. **source** time -- which silently works only while
+    the first episode starts at source 0.  Task 21 (material 864) cut its first
+    episode at source 179.0, so a perfectly clean cue at program 177.92-180.65
+    was reported FAIL for "crossing" the source second 179.0, which is not a
+    cut at all in the program.  A gate that blocks freezing on a number that is
+    not a cut is worse than no gate.
+
+    Timeline files that carry ``program_start`` / ``program_end`` get the correct
+    comparison; every historical timeline without those fields falls back to the
+    old behaviour unchanged.
+    """
+    try:
+        start = float(episode["program_start"])
+        end = float(episode["program_end"])
+        if end > start:
+            return start, end
+    except (KeyError, TypeError, ValueError):
+        pass
+    return episode_range(episode)
+
+
 def gate_subtitles(entries: list[dict], episodes: list[dict], evidence: str) -> dict:
     ordered = sorted(entries, key=lambda item: item["start"])
     for prev, nxt in zip(ordered, ordered[1:]):
@@ -362,7 +388,7 @@ def gate_subtitles(entries: list[dict], episodes: list[dict], evidence: str) -> 
             wpm = len(entry["text"].split()) / max(duration / 60.0, 1e-6)
             if wpm > MAX_CPS_EN * 8:
                 return check("subtitle_timing", "WARN", f"{wpm:.0f} wpm", "readable", evidence)
-        for start, end in (episode_range(ep) for ep in episodes):
+        for start, end in (subtitle_bounds(ep) for ep in episodes):
             if start < entry["start"] < end < entry["end"] or entry["start"] < start < entry["end"] < end:
                 if abs(entry["start"] - start) > 0.2 and abs(entry["end"] - end) > 0.2:
                     return check("subtitle_span", "FAIL", f"{entry['start']:.2f}-{entry['end']:.2f} crosses cut", "zero cross-cut", evidence)

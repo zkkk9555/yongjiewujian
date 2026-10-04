@@ -178,8 +178,18 @@ Write-Output ("  池中已收录条目: {0} 条" -f $absorbedIds.Count)
 # 3. 抽取候选教训
 # ---------------------------------------------------------------------------
 # 抽标题里带教训味的小节：## 坑 / ## 教训 / ## 根因 / ## 规则 / ### R1 / ## Lesson ...
-$lessonPattern = '(?m)^\s{0,4}#{2,4}\s*(?:[Tt]?\d*\s*)?(?:坑|教训|根因|规则|经验|lesson|LESSON|Lesson|R\d)[^\r\n]*'
-$worthPattern = '(?m)^\s{0,4}#{2,4}\s*(?:坑\s*\d|教训|根因|规则|经验|LESSON|Lesson)'
+# 教训不写在「教训」这个词里。
+#
+# 864 重剪那份 workflow_notes 通篇是编号标题（## 1 / ### 2.4 / ### 4.1 ...），
+# 一个都不含 坑/教训/根因/规则/经验/lesson，早先按关键词抽标题的版本把它判成
+# 「没有教训」——**一份满是经验的文档被静默报成空的**，而脚本还会照常打印
+# 「（空）所有经验源的教训都已在池中标记为吸收」。这种假阴性比误报危险得多：
+# 它让人以为已经收纳完了。
+#
+# 宁可多报也不漏报：所有 ## / ### 标题都算候选，POOL 匹配那一关负责去重。
+# 只有明显的导航型标题排除掉。
+$lessonPattern = '(?m)^\s{0,3}(#{2,3})\s+(?!\s*$)([^\r\n]+)'
+$notALesson = '(基本盘|^目\s*录|^背景|^对照|^参考|^附录|^index|^table of contents)'
 
 $found = New-Object System.Collections.ArrayList
 foreach ($c in $candidates) {
@@ -190,7 +200,8 @@ foreach ($c in $candidates) {
     if ($hits.Count -eq 0) { continue }
     # 逐条判断：一份经验源里可能只吸收了一部分，用首个标题代表整份会漏报。
     foreach ($h in $hits) {
-        $title = $h.Value.Trim()
+        $title = $h.Groups[2].Value.Trim()
+        if ($title -match $notALesson) { continue }
         [void]$found.Add([PSCustomObject]@{
             Source = $c.Source
             Kind   = $c.Kind
