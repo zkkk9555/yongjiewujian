@@ -23,7 +23,7 @@ Source: E:\OBS or E:\PR导出, read-only
 
 Never create a per-task virtual environment or reinstall an existing project tool. Run the project environment check before processing.
 
-This project-local folder is the only canonical copy of the skill. Do not install or copy another `naraka-highlight-studio` into the user-level skills directory. When this project is in scope, read this file by its project path even if the global skill list does not show it.
+This project-local folder is the only canonical copy of the skill. Do not install or copy another `naraka-highlight-studio` into the user-level skills directory. Since 2026-10-05 it is advertised normally: the project's `opencode.json` sets `"skills": ["./skills"]`, because OpenCode's project discovery paths are `.opencode/skills`, `.claude/skills` and `.agents/skills` — a bare `skills/` at the project root is **not** one of them. If this skill ever stops appearing in the available-skills list, check that `opencode.json` is still in the project root before falling back to reading it by path.
 
 ## Modes
 
@@ -54,7 +54,7 @@ Use the bundled helpers for repeatable mechanics:
 - `scripts/export_edit_timeline.py` — OTIO, Premiere XML, and marker CSV;
 - `scripts/validate_combat_timeline.py` — complete-combat boundary, ordering, overlap, and deletion-audit checks;
 - `scripts/validate_delivery.py` — delivery smoke checks.
-- `scripts/qa_gate.py` — twelve QA gates in one entry (any FAIL blocks freezing).
+- `scripts/qa_gate.py` — every delivery gate in one entry (any FAIL blocks freezing).
 
 These helpers do not replace visual review or event judgment; they make the same decisions reproducible and make later one-shot revisions cheap.
 
