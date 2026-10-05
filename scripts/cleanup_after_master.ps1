@@ -57,7 +57,6 @@ $JobsRoot    = Join-Path $ProjectRoot '123'
 
 # Directories that are regenerable from the source and are not evidence.
 $Disposable = @('preview', 'cache', 'shots', 'audio')
-
 function Say  { param([string]$m) Write-Output $m }
 function Die  { param([string]$m) [Console]::Error.WriteLine("[FAIL] $m"); exit 1 }
 

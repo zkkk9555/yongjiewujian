@@ -1,0 +1,86 @@
+{
+ "meta": {
+  "label": "vfy_turbo",
+  "model": "C:\\Project\\永劫无间\\.video-tools\\models\\local\\whisper-large-v3-turbo",
+  "compute_type": "float16",
+  "beam_size": 5,
+  "vad": true,
+  "hotwords": "",
+  "audio": "C:\\Project\\永劫无间\\.scratch\\aivideo\\asr_bench\\verify_120s.wav",
+  "audio_duration": 120.0,
+  "model_load_s": 5.03,
+  "decode_wall_s": 1.49,
+  "total_wall_s": 6.52,
+  "realtime_factor": 80.41,
+  "segments": 9,
+  "speech_s": 41.3,
+  "mean_avg_logprob": -0.361,
+  "python": "3.12.10",
+  "ffmpeg_procs_during_run": 1
+ },
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.0,
+   "text": "不一定,不一定在",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 2.0,
+   "end": 9.12,
+   "text": "目前还没有",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 9.12,
+   "end": 11.87,
+   "text": "有个千斤伞你要挖吗",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 11.87,
+   "end": 14.05,
+   "text": "你,过来拿",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 14.05,
+   "end": 15.05,
+   "text": "你拿不下",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 15.05,
+   "end": 18.5,
+   "text": "你就说吧,我也太不下了",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 95.23,
+   "end": 104.21,
+   "text": "我先别吃营火虫了",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 104.21,
+   "end": 106.8,
+   "text": "他要来我直接就开大吃营火虫了",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  },
+  {
+   "start": 106.8,
+   "end": 118.08,
+   "text": "那你先出去看看",
+   "avg_logprob": -0.361,
+   "no_speech_prob": 0.0
+  }
+ ]
+}

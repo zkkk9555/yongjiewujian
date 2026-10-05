@@ -97,6 +97,33 @@ if ($null -eq $episodes -or $episodes.Count -eq 0) {
     exit 1
 }
 
+# --- refuse a PARTIAL timeline (roughcut-launch.md §2.6 / §2.8) -------------
+# An island-merge partial (`merge_decision_vN-partial-r{k}`) exists so that
+# merging can start before every lane returns -- it removes the 9.3-hour wait on
+# task 861.  It is NOT a master: §2.6 forbids the render / subtitle / self-audit
+# stages from accepting it, and §2.8 says it never becomes final.
+#
+# This is the 4K chain's only entry point, so this refusal has to live here and
+# not only in qa_gate.py: measured today, no script called qa_gate before
+# delivery, and the 720p preview bypassed this reader entirely.
+$PARTIAL_MARK = '-partial'
+$isPartial = ($Timeline -like "*$PARTIAL_MARK*")
+$isPartialDoc = $false
+if (-not ($data -is [System.Array]) -and $null -ne $data.PSObject.Properties['partial']) {
+    $isPartialDoc = [bool]$data.partial
+}
+$versionPartial = $false
+if (-not ($data -is [System.Array]) -and $null -ne $data.PSObject.Properties['version']) {
+    $versionPartial = ([string]$data.version).Contains($PARTIAL_MARK)
+}
+if ($isPartial -or $isPartialDoc -or $versionPartial) {
+    [Console]::Error.WriteLine('[FAIL] this timeline is a PARTIAL island-merge draft, not a deliverable')
+    [Console]::Error.WriteLine(("[FAIL] signals: filename={0} flag={1} version={2}" -f $isPartial, $isPartialDoc, $versionPartial))
+    [Console]::Error.WriteLine('[FAIL] roughcut-launch.md §2.6/§2.8: a partial is never frozen, rendered, captioned or self-audited.')
+    [Console]::Error.WriteLine('[FAIL] wait for the remaining lanes, then merge to a full version.')
+    exit 1
+}
+
 # --- coverage: kept + deleted must tile the whole source --------------------
 # This is the second, independent implementation of the same rule as
 # qa_gate.py's `coverage_complete`.  Two implementations on purpose: qa_gate

@@ -1,0 +1,51 @@
+{
+ "meta": {
+  "label": "vfy_largev3",
+  "model": "large-v3",
+  "compute_type": "float16",
+  "beam_size": 5,
+  "vad": true,
+  "hotwords": "",
+  "audio": "C:\\Project\\永劫无间\\.scratch\\aivideo\\asr_bench\\verify_120s.wav",
+  "audio_duration": 120.0,
+  "model_load_s": 9.33,
+  "decode_wall_s": 3.64,
+  "total_wall_s": 12.96,
+  "realtime_factor": 32.99,
+  "segments": 4,
+  "speech_s": 95.3,
+  "mean_avg_logprob": -0.6138,
+  "python": "3.12.10",
+  "ffmpeg_procs_during_run": 1
+ },
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 10.28,
+   "text": "一定就一定在目前还没有有个千斤伞你要玩吗",
+   "avg_logprob": -0.6138,
+   "no_speech_prob": 0.2134
+  },
+  {
+   "start": 11.51,
+   "end": 16.41,
+   "text": "你回来呢你拿不拿不下你说吧 我也太不像了",
+   "avg_logprob": -0.6138,
+   "no_speech_prob": 0.2134
+  },
+  {
+   "start": 19.5,
+   "end": 87.89,
+   "text": "一切都等着死人没有数据回复还算成熟",
+   "avg_logprob": -0.6138,
+   "no_speech_prob": 0.2134
+  },
+  {
+   "start": 101.86,
+   "end": 113.6,
+   "text": "我先别吃萤火虫了 他要来我直接都开大吃萤火虫了 那你先出去看看吧",
+   "avg_logprob": -0.6138,
+   "no_speech_prob": 0.2134
+  }
+ ]
+}

@@ -52,6 +52,48 @@ def check(name: str, status: str, measured: Any, threshold: Any, evidence: str) 
     }
 
 
+PARTIAL_MARKER = "-partial"
+
+
+def refuse_partial_timeline(path: Path) -> dict:
+    """roughcut-launch.md §2.6 / §2.8: a partial must never be frozen, shipped or
+    judged as if it were final.
+
+    The island-merge valve (ticket 03) now emits `merge_decision_vN-partial-r{k}`
+    as soon as one lane comes back, which is what removes the 9.3-hour wait on
+    task 861.  That only helps if the half-finished artefact is mechanically
+    unable to pass as a master -- otherwise "merge early" just means "ship early".
+
+    Refusal keys off three independent signals, because any one alone is
+    forgeable by accident:
+      * the filename carries `-partial` (§2.8's reserved name),
+      * the document says `partial: true`,
+      * the version string carries the `-partial` suffix.
+    """
+    name = path.name
+    partial = PARTIAL_MARKER in name
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return check("no_partial_timeline", "WARN", "timeline unreadable",
+                     "refuse anything carrying -partial", str(path))
+    flagged = bool(raw.get("partial")) if isinstance(raw, dict) else False
+    version = str(raw.get("version", "")) if isinstance(raw, dict) else ""
+    suffix = PARTIAL_MARKER in version
+    if partial or flagged or suffix:
+        return check(
+            "no_partial_timeline",
+            "FAIL",
+            "partial artefact: filename=%s flag=%s version=%s"
+            % (partial, flagged, version or "-"),
+            "a -partial timeline is never frozen, rendered, captioned or self-audited "
+            "(roughcut-launch.md §2.6/§2.8)",
+            str(path),
+        )
+    return check("no_partial_timeline", "PASS", "no partial marker",
+                 "refuse anything carrying -partial", str(path))
+
+
 def load_timeline(path: Path) -> tuple[dict, list[dict]]:
     data = json.loads(path.read_text(encoding="utf-8"))
     episodes: list[dict] = []
@@ -793,6 +835,18 @@ def main() -> int:
 
     checks: list[dict] = []
     document: dict = {}
+    # Runs before anything reads the timeline: if this is a partial, nothing else
+    # in this run should be reported as if it were a delivery verdict.
+    partial_check = refuse_partial_timeline(args.timeline)
+    checks.append(partial_check)
+    if partial_check["result"] == "FAIL":
+        print(json.dumps({"pass": False, "fail": 1, "output": str(args.output)},
+                         ensure_ascii=False))
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            json.dumps({"schema": "naraka-qa-gate/v1", "checks": checks},
+                       ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        return 1
     try:
         document, episodes = load_timeline(args.timeline)
     except (OSError, ValueError) as exc:
