@@ -65,6 +65,32 @@ FFPROBE=$(cygpath -m "$FF_DIR/ffprobe.exe")
 THREADS="${NARAKA_FF_THREADS:-4}"
 FILTER_THREADS="${NARAKA_FF_FILTER_THREADS:-4}"
 
+# --- encoder preset -----------------------------------------------------------
+# Measured 2026-10-06 on this box, 20 s of real source, same filter chain
+# (lanczos 1440p->4K, NVENC, -rc vbr -b:v 18M -maxrate 28M -bufsize 56M), each
+# preset timed and then scored against a near-lossless libx264 -qp 8 reference:
+#
+#     preset   wall     size        PSNR-Y     SSIM
+#     p7      69.81 s  12,957,249   56.63      0.9999
+#     p5      58.05 s  13,001,511   56.64      0.9999
+#     p4      67.44 s  13,082,298   56.58      0.9999
+#
+# p7 -> p4 buys ~0.05 dB PSNR-Y either way -- that is noise, not a picture
+# difference -- and at 18 Mbit/s with AQ on, it is *slower* here, not faster.
+# So p7 stays the default.  It is the slower preset precisely because it spends
+# more search on the parts of a high-motion game frame that a flat 18 Mbit/s
+# target would otherwise smear, and that is the part we are shipping.
+#
+# The knob exists for the times a task is genuinely waiting on the render and the
+# operator has decided that is acceptable:
+#
+#     NARAKA_FF_PRESET=p4 bash scripts/seg_render_master.sh ...
+#
+# Do not change this without re-measuring the table above.  Agent 17 reported a
+# 3.55x win from p7 -> p4; measured here it is a 3% *loss*, which is what happens
+# when a throughput claim is not run against this filter chain and this encoder.
+PRESET="${NARAKA_FF_PRESET:-p7}"
+
 # --- read the cut list ------------------------------------------------------
 BOUNDS=$(powershell.exe -NoProfile -ExecutionPolicy Bypass \
   -File "$(cygpath -m "$PS_DIR/read_episode_bounds.ps1")" "$(cygpath -w "$MAP")" | tr -d '\r') || {
@@ -102,6 +128,7 @@ mkdir -p "$SEGDIR"
 echo "SEG_RENDER_START $(date -u +%FT%TZ)" > "$LOG_P"
 echo "map=$MAP output=$OUT" >> "$LOG_P"
 echo "ffmpeg=$FF" >> "$LOG_P"
+echo "threads=$THREADS filter_threads=$FILTER_THREADS preset=$PRESET" >> "$LOG_P"
 echo "episodes=$N expected_program_sec=$PROGRAM" >> "$LOG_P"
 
 LIST="$SEGDIR/concat.txt"
@@ -113,7 +140,7 @@ for ((i=0; i<N; i++)); do
   "$FF" -hide_banner -y -v error -threads "$THREADS" -filter_threads "$FILTER_THREADS" \
     -ss "$S" -to "$E" -i "$SRC_W" \
     -vf "fps=60,scale=3840:2160:flags=lanczos,setsar=1,format=yuv420p" \
-    -c:v h264_nvenc -preset p7 -tune hq -profile:v high -level:v 5.2 \
+    -c:v h264_nvenc -preset "$PRESET" -tune hq -profile:v high -level:v 5.2 \
     -rc vbr -b:v 18M -maxrate 28M -bufsize 56M -g 120 -bf 2 \
     -spatial-aq 1 -temporal-aq 1 -aq-strength 8 \
     -pix_fmt yuv420p -r 60 -fps_mode cfr \
