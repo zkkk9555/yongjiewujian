@@ -97,6 +97,102 @@ if ($null -eq $episodes -or $episodes.Count -eq 0) {
     exit 1
 }
 
+# --- coverage: kept + deleted must tile the whole source --------------------
+# This is the second, independent implementation of the same rule as
+# qa_gate.py's `coverage_complete`.  Two implementations on purpose: qa_gate
+# proves the rule, this reader proves the 4K chain actually enforces it, and
+# scripts/test_coverage_gate.sh fails if they ever disagree.
+#
+# Measured on 864 v6 before this check existed: deleting any one of its 7 real
+# battles left every gate green, the largest being 233.45 s = 35% of the
+# programme.  Nothing compared kept + deleted against the source duration, so a
+# whole fight could vanish and the render would simply be shorter.
+#
+# Stays silent (no failure) when source_duration is unknown or no deletions are
+# declared, so hand-written timelines keep working.  A gate stricter than
+# reality is the same disease as no gate at all.
+$COVERAGE_TOLERANCE_S = 0.25
+$sourceDuration = $null
+if (-not ($data -is [System.Array]) -and $null -ne $data.PSObject.Properties['source_duration']) {
+    $sd = 0.0
+    if ([double]::TryParse([string]$data.source_duration, [ref]$sd) -and $sd -gt 0) { $sourceDuration = $sd }
+}
+$deletions = New-Object System.Collections.ArrayList
+if (-not ($data -is [System.Array]) -and $null -ne $data.PSObject.Properties['deleted_intervals'] -and $null -ne $data.deleted_intervals) {
+    foreach ($d in @($data.deleted_intervals)) {
+        if ($null -eq $d -or $null -eq $d.PSObject.Properties['start'] -or $null -eq $d.PSObject.Properties['end']) { continue }
+        $ds = 0.0; $de = 0.0
+        if ([double]::TryParse([string]$d.start, [ref]$ds) -and [double]::TryParse([string]$d.end, [ref]$de) -and $de -gt $ds) {
+            # PSCustomObject, never a bare pair: a pipeline unrolls a collection
+            # whose element IS an array, which is the bug documented further down.
+            [void]$deletions.Add([PSCustomObject]@{ Start = $ds; End = $de })
+        }
+    }
+}
+if ($null -ne $sourceDuration -and $deletions.Count -gt 0) {
+    $spans = New-Object System.Collections.ArrayList
+    foreach ($ep in $episodes) {
+        if ($null -eq $ep.PSObject.Properties['source_start'] -or $null -eq $ep.PSObject.Properties['source_end']) { continue }
+        [void]$spans.Add([PSCustomObject]@{ Start = [double]$ep.source_start; End = [double]$ep.source_end })
+    }
+    foreach ($d in $deletions) { [void]$spans.Add($d) }
+
+    $over = $null
+    foreach ($s in $spans) {
+        if ($s.End -gt ($sourceDuration + $COVERAGE_TOLERANCE_S)) {
+            [Console]::Error.WriteLine(("[FAIL] coverage: span [{0},{1}] runs past source_duration {2}" -f $s.Start, $s.End, $sourceDuration))
+            exit 1
+        }
+    }
+    # A second that is both kept and declared deleted is a double declaration:
+    # the render will show it while the ledger says it was cut.  Checked before
+    # the union walk because merging would silently absorb the disagreement.
+    foreach ($ep in $episodes) {
+        if ($null -eq $ep.PSObject.Properties['source_start'] -or $null -eq $ep.PSObject.Properties['source_end']) { continue }
+        $es = [double]$ep.source_start
+        $ee = [double]$ep.source_end
+        foreach ($d in $deletions) {
+            $overlap = [math]::Min($ee, $d.End) - [math]::Max($es, $d.Start)
+            if ($overlap -gt $COVERAGE_TOLERANCE_S) {
+                [Console]::Error.WriteLine(("[FAIL] coverage: kept [{0},{1}] also declared deleted [{2},{3}] by {4}s" -f `
+                    $es, $ee, $d.Start, $d.End, [math]::Round($overlap, 2)))
+                exit 1
+            }
+        }
+    }
+    $mS = New-Object System.Collections.ArrayList
+    $mE = New-Object System.Collections.ArrayList
+    foreach ($s in ($spans | Sort-Object Start)) {
+        $last = $mS.Count - 1
+        if ($mS.Count -gt 0 -and $s.Start -le ($mE[$last] + 0.000000001)) {
+            if ($s.End -gt $mE[$last]) { $mE[$last] = $s.End }
+        } else {
+            [void]$mS.Add($s.Start)
+            [void]$mE.Add($s.End)
+        }
+    }
+    $offenders = New-Object System.Collections.ArrayList
+    if ($mS[0] -gt $COVERAGE_TOLERANCE_S) {
+        [void]$offenders.Add(("[0.00,{0}] {1}s" -f $mS[0], [math]::Round($mS[0], 2)))
+    }
+    for ($k = 0; $k -lt $mS.Count - 1; $k++) {
+        $gap = $mS[$k + 1] - $mE[$k]
+        if ($gap -gt $COVERAGE_TOLERANCE_S) {
+            [void]$offenders.Add(("[{0},{1}] {2}s" -f $mE[$k], $mS[$k + 1], [math]::Round($gap, 2)))
+        }
+    }
+    $tail = $sourceDuration - $mE[$mE.Count - 1]
+    if ($tail -gt $COVERAGE_TOLERANCE_S) {
+        [void]$offenders.Add(("[{0},{1}] {2}s" -f ($sourceDuration - $tail), $sourceDuration, [math]::Round($tail, 2)))
+    }
+    if ($offenders.Count -gt 0) {
+        [Console]::Error.WriteLine(("[FAIL] coverage: {0} undeclared gap(s) in [{1}s] -- kept + deleted must tile the source. First: {2}{3}" -f `
+            $offenders.Count, $sourceDuration, $offenders[0], $(if ($offenders.Count -gt 1) { " (+$($offenders.Count - 1) more)" } else { '' })))
+        [Console]::Error.WriteLine('[FAIL] a battle may have been dropped from the timeline without being declared deleted')
+        exit 1
+    }
+}
+
 $total = 0.0
 $lines = New-Object System.Collections.ArrayList
 $i = 0

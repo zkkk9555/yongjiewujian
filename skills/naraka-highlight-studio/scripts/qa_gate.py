@@ -37,6 +37,9 @@ MIN_SUBTITLE_DURATION_S = 0.8
 MAX_SUBTITLE_DURATION_S = 7.0
 MAX_CPS_ZH = 12
 MAX_CPS_EN = 20
+# Wider than the truth on purpose: container durations round, and a gate
+# stricter than reality is the same disease as no gate at all.
+COVERAGE_TOLERANCE_S = 0.25
 
 
 def check(name: str, status: str, measured: Any, threshold: Any, evidence: str) -> dict:
@@ -240,6 +243,151 @@ def gate_no_zero_gap_pseudo_cuts(episodes: list[dict], evidence: str) -> dict:
         else f"{len(ordered)} episodes, no zero-gap cuts"
     )
     return check("no_zero_gap_pseudo_cuts", status, measured, "adjacent source_end != next source_start", evidence)
+
+
+def _deleted_ranges(document: dict) -> list[tuple[float, float, str]]:
+    out: list[tuple[float, float, str]] = []
+    raw = document.get("deleted_intervals") if isinstance(document, dict) else None
+    if not isinstance(raw, list):
+        return out
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        try:
+            start = float(item.get("start", item.get("source_start")))
+            end = float(item.get("end", item.get("source_end")))
+        except (TypeError, ValueError):
+            continue
+        if end > start:
+            out.append((start, end, str(item.get("category", "?"))))
+    return out
+
+
+def gate_coverage_complete(
+    episodes: list[dict],
+    document: dict,
+    duration: float | None,
+    evidence: str,
+) -> dict:
+    """Every second of the source must be either kept as an episode or declared
+    as a deleted interval.  Undeclared gaps are how a whole battle disappears
+    without anybody noticing.
+
+    Measured on 864 v6: deleting any one of its 7 real battles left every
+    existing gate green (7/7), the largest single deletion being 233.45 s =
+    35% of the whole programme.  `timeline_mutex` only compares episodes with
+    each other, `source_range` only looks at kept episodes, and
+    `program_sum` compares against a program_map the commander rewrote in the
+    same pass -- so nothing ever compared kept + deleted against the source.
+
+    Kept deliberately wider than the truth, because this project has been
+    burned twice by gates stricter than reality (861 `preview_duration` false
+    FAIL, `verify_master.sh` false FAIL on a track-less master):
+      * unknown source_duration or no declared deletions -> WARN, never FAIL;
+      * tolerance 0.25 s, not 0.05 s, so container rounding cannot trip it.
+    """
+    deletions = _deleted_ranges(document)
+    if not episodes:
+        # A known-length source with zero episodes means an empty programme,
+        # which is never a pass.  main() used to skip every timeline gate when
+        # the episode list was empty, so deleting all seven battles of 864 v6
+        # reported green.
+        if duration is None and isinstance(document, dict):
+            raw_duration = document.get("source_duration")
+            if isinstance(raw_duration, (int, float)):
+                duration = float(raw_duration)
+        if duration is not None and duration > 0:
+            return check(
+                "coverage_complete",
+                "FAIL",
+                f"0 episodes for a {duration:.2f}s source -- nothing would be rendered",
+                "at least one episode, or an explicit empty-source declaration",
+                evidence,
+            )
+    if duration is None and isinstance(document, dict):
+        raw_duration = document.get("source_duration")
+        if isinstance(raw_duration, (int, float)):
+            duration = float(raw_duration)
+    if duration is None or duration <= 0:
+        return check(
+            "coverage_complete",
+            "WARN",
+            "source_duration unknown",
+            "declare source_duration to enable this gate",
+            evidence,
+        )
+    if not deletions:
+        return check(
+            "coverage_complete",
+            "WARN",
+            "no deleted_intervals declared",
+            "kept + deleted must tile [0, source_duration]",
+            evidence,
+        )
+
+    spans = [(episode_range(ep)[0], episode_range(ep)[1], "episode") for ep in episodes]
+    spans += [(start, end, f"deleted:{cat}") for start, end, cat in deletions]
+
+    # A second that is both kept and declared deleted is a double declaration:
+    # the render will show it while the ledger says it was cut.
+    for e_start, e_end, _ in [(episode_range(ep)[0], episode_range(ep)[1], "") for ep in episodes]:
+        for d_start, d_end, cat in deletions:
+            overlap = min(e_end, d_end) - max(e_start, d_start)
+            if overlap > COVERAGE_TOLERANCE_S:
+                return check(
+                    "coverage_complete",
+                    "FAIL",
+                    f"kept [{e_start:.2f}, {e_end:.2f}] overlaps deleted [{d_start:.2f}, {d_end:.2f}] {cat} by {overlap:.2f}s",
+                    "no second both kept and deleted",
+                    evidence,
+                )
+
+    beyond = sorted((s, e, tag) for s, e, tag in spans if e > duration + COVERAGE_TOLERANCE_S)
+    if beyond:
+        s, e, tag = beyond[0]
+        return check(
+            "coverage_complete",
+            "FAIL",
+            f"{tag} ends at {e:.2f} > source_duration {duration:.2f}",
+            "all spans within source_duration",
+            evidence,
+        )
+
+    merged: list[list[float]] = []
+    for start, end, _ in sorted(spans):
+        if merged and start <= merged[-1][1] + 1e-9:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+
+    gaps = [
+        (merged[i][1], merged[i + 1][0])
+        for i in range(len(merged) - 1)
+        if merged[i + 1][0] - merged[i][1] > COVERAGE_TOLERANCE_S
+    ]
+    head = merged[0][0]
+    tail = duration - merged[-1][1]
+    offenders = []
+    if head > COVERAGE_TOLERANCE_S:
+        offenders.append(f"head gap [0.00, {head:.2f}]")
+    offenders += [f"gap [{a:.2f}, {b:.2f}] {b - a:.2f}s" for a, b in gaps]
+    if tail > COVERAGE_TOLERANCE_S:
+        offenders.append(f"tail gap [{duration - tail:.2f}, {duration:.2f}] {tail:.2f}s")
+    if offenders:
+        return check(
+            "coverage_complete",
+            "FAIL",
+            f"{len(offenders)} undeclared gap(s): " + offenders[0] + (f" (+{len(offenders) - 1} more)" if len(offenders) > 1 else ""),
+            f"kept + deleted tiles [0, {duration:.2f}] within {COVERAGE_TOLERANCE_S}s",
+            evidence,
+        )
+    return check(
+        "coverage_complete",
+        "PASS",
+        f"{len(spans)} spans tile [0.00, {duration:.2f}] with no gap > {COVERAGE_TOLERANCE_S}s",
+        f"kept + deleted tiles [0, {duration:.2f}]",
+        evidence,
+    )
 
 
 def episode_bounds_present(episode: dict) -> bool:
@@ -518,6 +666,9 @@ def main() -> int:
         checks.append(gate_no_holes_in_battle(episodes, str(args.timeline), whole_battle_strict))
         checks.append(gate_no_zero_gap_pseudo_cuts(episodes, str(args.timeline)))
         checks.append(gate_program_sum(episodes, args.program_map, str(args.timeline)))
+    # Coverage runs even when the episode list is empty, because "no episodes"
+    # used to skip every timeline gate and therefore reported green.
+    checks.append(gate_coverage_complete(episodes, document, args.source_duration, str(args.timeline)))
     ffprobe = args.ffprobe or shutil.which("ffprobe")
     probe = run_probe(ffprobe, args.preview) if args.preview else None
     preview_evidence = str(args.preview) if args.preview else "no preview"
