@@ -323,7 +323,7 @@ if ($strays.Count -gt 0) {
 #
 # WARN, not BLOCKER: neither breaks a roughcut.  Both are path-discipline
 # violations -- derived output belongs under 123\<N>.<material>, not the root.
-$AllowedRootFiles = @('AGENTS.md', 'IMAGE_LIMIT.md', 'README.md', '.gitignore', '.gitattributes')
+$AllowedRootFiles = @('AGENTS.md', 'IMAGE_LIMIT.md', 'README.md', '.gitignore', '.gitattributes', 'opencode.json')
 $rootStrayFiles = @(Get-ChildItem -LiteralPath $ProjectRoot -File -Force -ErrorAction SilentlyContinue |
                     Where-Object { $AllowedRootFiles -notcontains $_.Name })
 $rootEmptyDirs = @(Get-ChildItem -LiteralPath $ProjectRoot -Directory -Force -ErrorAction SilentlyContinue |
