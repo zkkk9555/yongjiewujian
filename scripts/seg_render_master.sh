@@ -89,6 +89,30 @@ FILTER_THREADS="${NARAKA_FF_FILTER_THREADS:-4}"
 # Do not change this without re-measuring the table above.  Agent 17 reported a
 # 3.55x win from p7 -> p4; measured here it is a 3% *loss*, which is what happens
 # when a throughput claim is not run against this filter chain and this encoder.
+#
+# MEASURED TWICE, DISAGREED -- read before changing this again (2026-10-06/07)
+#
+#   run A, this box, E:\OBS source (2560x1440 HEVC, so `scale=3840:2160` is a
+#   real lanczos UPSCALE):  p7 69.81 s  /  p4 67.44 s   -> p4 is 3% slower
+#
+#   run B, agent 04, contended machine, real-4K source (`scale` is a no-op there):
+#   claimed 1.68x from `-preset p4 -rc-lookahead 0 -g 30 -bf 0`, with the honest
+#   caveat that it never finished a run on the true-4K source.
+#
+# Two runs, opposite directions, one uncontrolled variable each.  Upscaling is
+# the likely explanation: with lanczos upsampling, p7's extra search pays for
+# itself on high-motion detail that a flat 18 Mbit/s would smear; without it, the
+# extra search buys nothing and only costs time.
+#
+# So: do NOT change the default on the strength of either number.  If this is
+# ever revisited, measure BOTH sources -- E:\OBS (1440p, upscale) and E:\PR导出
+# (true 4K, no-op) -- on an idle machine, and report the pair.  One source proves
+# nothing here.
+#
+# A second question this raises, which is not a tuning matter: scaling 1440p up
+# to 3840x2160 adds no information and costs real time.  Whether the master
+# should be 4K for a 1440p source at all is a delivery decision for the user,
+# not something to settle by making the slower path faster.
 PRESET="${NARAKA_FF_PRESET:-p7}"
 
 # --- read the cut list ------------------------------------------------------
