@@ -1,1 +1,11 @@
-文件名、目录名或卷标语法不正确。
+Impossible to convert between the formats supported by the filter 'graph -1 input from stream 0:0' and the filter 'auto_scale_0'
+Link 'graph -1 input from stream 0:0.default' -> 'auto_scale_0.default':
+  src: yuv420p
+  dst: yuv420p
+[vf#0:0 @ 000002675ba569c0] Error reinitializing filters!
+[vf#0:0 @ 000002675ba569c0] Task finished with error code: -40 (Function not implemented)
+[vf#0:0 @ 000002675ba569c0] Terminating thread with return code -40 (Function not implemented)
+[vost#0:0/h264_nvenc @ 000002675b9807c0] [enc:h264_nvenc @ 000002675e24c580] Could not open encoder before EOF
+[vost#0:0/h264_nvenc @ 000002675b9807c0] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/h264_nvenc @ 000002675b9807c0] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 000002675d913600] Nothing was written into output file, because at least one of its streams received no packets.
