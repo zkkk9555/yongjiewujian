@@ -1,0 +1,1023 @@
+{
+ "meta": {
+  "label": "medium_fp16_b5_vad",
+  "model": "medium",
+  "compute_type": "float16",
+  "beam_size": 5,
+  "vad": true,
+  "hotwords": false,
+  "audio_duration": 1247.81,
+  "model_load_s": 1.41,
+  "decode_wall_s": 20.77,
+  "total_wall_s": 22.17,
+  "realtime_factor": 60.08,
+  "segments": 143,
+  "speech_s": 1012.1,
+  "mean_avg_logprob": -0.4782,
+  "ffmpeg_before": 2,
+  "ffmpeg_after": 3
+ },
+ "segments": [
+  {
+   "start": 41.91,
+   "end": 68.44,
+   "text": "你们不是俩人吗?练勾索不见人",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 68.44,
+   "end": 90.36,
+   "text": "后面有个人跟着我,我还有个紫阔",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 90.36,
+   "end": 98.7,
+   "text": "我还有两个紫阔",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 98.7,
+   "end": 102.9,
+   "text": "我下给你",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 102.9,
+   "end": 111.16,
+   "text": "他拿斩",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 111.16,
+   "end": 114.17,
+   "text": "你不要吗?我有两把紫阔",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 114.17,
+   "end": 117.37,
+   "text": "我拿不下了",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 117.37,
+   "end": 130.34,
+   "text": "还算撑手",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 131.19,
+   "end": 139.51,
+   "text": "怎么卷银啊?好东西",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 139.51,
+   "end": 142.1,
+   "text": "让你看看他们吧",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 142.1,
+   "end": 144.1,
+   "text": "刚才有个榴炼,不知道是不是人机刚才追着我",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 144.1,
+   "end": 158.01,
+   "text": "让你看看吧",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 158.01,
+   "end": 165.4,
+   "text": "我要跟一个人机榴炼打",
+   "avg_logprob": -0.4621,
+   "no_speech_prob": 0.4438
+  },
+  {
+   "start": 165.4,
+   "end": 229.74,
+   "text": "这个人机流量大,对不对,这把有人,两个人机在打,对,这是人机,打我一点伤害都没有,是不是人机绝啊这把,解密吧",
+   "avg_logprob": -0.5962,
+   "no_speech_prob": 0.6284
+  },
+  {
+   "start": 229.74,
+   "end": 231.62,
+   "text": "一将蔓延",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 243.14,
+   "end": 244.14,
+   "text": "没有啊,没放",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 244.14,
+   "end": 249.63,
+   "text": "放了之后是蓝色的",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 249.63,
+   "end": 250.63,
+   "text": "羊",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 250.63,
+   "end": 253.42,
+   "text": "中间这个是个",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 253.42,
+   "end": 258.71,
+   "text": "这个老鞭子",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 262.43,
+   "end": 263.43,
+   "text": "我都得截个图",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 263.43,
+   "end": 266.95,
+   "text": "不好认这玩意",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 268.95,
+   "end": 291.26,
+   "text": "他搬这个玩意还搬半天",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 294.81,
+   "end": 296.11,
+   "text": "中间这个好",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 296.11,
+   "end": 299.07,
+   "text": "他差右边这个",
+   "avg_logprob": -0.3317,
+   "no_speech_prob": 0.4365
+  },
+  {
+   "start": 299.07,
+   "end": 316.33,
+   "text": "两个小人",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 316.33,
+   "end": 317.33,
+   "text": "两个小人",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 317.33,
+   "end": 326.9,
+   "text": "OK",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 326.9,
+   "end": 327.9,
+   "text": "主要这玩意还",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 327.9,
+   "end": 331.1,
+   "text": "我刚解密这个狗索的",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 331.1,
+   "end": 338.06,
+   "text": "真强",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 338.06,
+   "end": 339.06,
+   "text": "吃燕盏",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 339.06,
+   "end": 340.06,
+   "text": "吃燕盏",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 340.06,
+   "end": 343.67,
+   "text": "我不用了",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 343.67,
+   "end": 350.77,
+   "text": "都用手",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 350.77,
+   "end": 352.77,
+   "text": "正好两个锤子",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 352.77,
+   "end": 356.63,
+   "text": "你不要",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 356.63,
+   "end": 357.63,
+   "text": "就给我你戴不下了",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 357.63,
+   "end": 359.9,
+   "text": "戴回扬",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 359.9,
+   "end": 362.06,
+   "text": "那儿",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 362.06,
+   "end": 366.47,
+   "text": "找不回了",
+   "avg_logprob": -0.4092,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 366.47,
+   "end": 367.47,
+   "text": "我正在找",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 367.47,
+   "end": 376.06,
+   "text": "弥彥明",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 377.06,
+   "end": 380.04,
+   "text": "能拍成用场",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 380.04,
+   "end": 381.04,
+   "text": "你过来拿",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 381.04,
+   "end": 382.04,
+   "text": "两件",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 382.04,
+   "end": 400.67,
+   "text": "这个",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 400.67,
+   "end": 402.78,
+   "text": "可以养剑",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 402.78,
+   "end": 403.78,
+   "text": "不管它了",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 403.78,
+   "end": 404.78,
+   "text": "不关机",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 404.78,
+   "end": 405.78,
+   "text": "他打我",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 405.78,
+   "end": 406.78,
+   "text": "嗯",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 406.78,
+   "end": 430.68,
+   "text": "想起来在无常村的最后一局",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 430.68,
+   "end": 433.05,
+   "text": "应该无权是无权",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 433.05,
+   "end": 434.05,
+   "text": "好",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 434.05,
+   "end": 435.05,
+   "text": "对",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 435.05,
+   "end": 441.13,
+   "text": "哦 这个穿起来靠",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 441.13,
+   "end": 455.58,
+   "text": "给你金的开大",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 455.58,
+   "end": 473.42,
+   "text": "转开这",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 473.42,
+   "end": 503.79,
+   "text": "我挣了一个金扇子过来",
+   "avg_logprob": -0.5668,
+   "no_speech_prob": 0.5674
+  },
+  {
+   "start": 503.79,
+   "end": 513.06,
+   "text": "可以啊,人一直在那,在那瞎整",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 513.06,
+   "end": 520.76,
+   "text": "给你金战金枪你要哪个",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 520.76,
+   "end": 522.94,
+   "text": "我要杀你",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 522.94,
+   "end": 530.74,
+   "text": "OK",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 530.74,
+   "end": 566.24,
+   "text": "被开过了这保护",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 566.24,
+   "end": 571.36,
+   "text": "咱可以去堵这个",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 571.36,
+   "end": 572.36,
+   "text": "一会儿这个要开了",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 572.36,
+   "end": 574.36,
+   "text": "他们上面有那个",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 574.36,
+   "end": 583.06,
+   "text": "有那个,那个啥",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 583.06,
+   "end": 584.36,
+   "text": "有违信的",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 584.36,
+   "end": 587.94,
+   "text": "有所有的,咱们出去",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 587.94,
+   "end": 589.94,
+   "text": "有点像秘籍的那个",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 589.94,
+   "end": 590.94,
+   "text": "对",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 590.94,
+   "end": 596.35,
+   "text": "不行,那去我们有出去",
+   "avg_logprob": -0.4109,
+   "no_speech_prob": 0.7476
+  },
+  {
+   "start": 596.35,
+   "end": 610.26,
+   "text": "反正他也不一定不一定在目前还没有个千斤伞在那挖吗",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 611.54,
+   "end": 614.47,
+   "text": "你回来拿你拿吧拿不下",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 614.95,
+   "end": 616.39,
+   "text": "你就说吧 我也太不像了",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 619.52,
+   "end": 621.83,
+   "text": "你谁",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 629.48,
+   "end": 630.08,
+   "text": "看人机",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 687.36,
+   "end": 687.88,
+   "text": "还算成熟",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 701.89,
+   "end": 705.28,
+   "text": "我先别吃烟火虫了 他要来我直接就开大吃烟火虫了",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 706.35,
+   "end": 713.55,
+   "text": "嗯 那你先出去看看吧",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 723.78,
+   "end": 729.38,
+   "text": "没有没人走了",
+   "avg_logprob": -0.7127,
+   "no_speech_prob": 0.6841
+  },
+  {
+   "start": 729.38,
+   "end": 735.89,
+   "text": "有眼 到 时间到了",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 735.89,
+   "end": 745.07,
+   "text": "地面去吧",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 752.38,
+   "end": 757.78,
+   "text": "我感觉这个东西",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 757.78,
+   "end": 759.78,
+   "text": "站地面非常之好用 我就站在那儿",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 759.78,
+   "end": 761.78,
+   "text": "然后我放一个这个圈",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 761.78,
+   "end": 767.06,
+   "text": "谁进来谁死",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 767.06,
+   "end": 770.14,
+   "text": "那个是啥啊 你指的是哪个",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 770.14,
+   "end": 773.94,
+   "text": "无视 无视",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 773.94,
+   "end": 776.18,
+   "text": "前节海",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 776.18,
+   "end": 778.18,
+   "text": "无视护甲 直接掉血的",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 778.18,
+   "end": 780.36,
+   "text": "站在那儿太美丽",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 780.36,
+   "end": 782.36,
+   "text": "来人 让我这儿来人",
+   "avg_logprob": -0.2993,
+   "no_speech_prob": 0.9082
+  },
+  {
+   "start": 782.36,
+   "end": 834.57,
+   "text": "精斩、精闊、金甲、辣甲、雷刀",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 834.57,
+   "end": 841.44,
+   "text": "试炼斩",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 841.44,
+   "end": 845.28,
+   "text": "完毕",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 845.28,
+   "end": 847.64,
+   "text": "完毕",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 847.64,
+   "end": 849.62,
+   "text": "对",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 849.62,
+   "end": 851.35,
+   "text": "你过来拿",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 851.35,
+   "end": 855.64,
+   "text": "规范啊,你操衙",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 855.64,
+   "end": 861.56,
+   "text": "炼斩我不要",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 861.56,
+   "end": 863.56,
+   "text": "你可以拿强袭",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 863.56,
+   "end": 865.56,
+   "text": "我有个强袭",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 865.56,
+   "end": 867.9,
+   "text": "拿着,能用上",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 867.9,
+   "end": 870.54,
+   "text": "谢谢",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 870.54,
+   "end": 877.21,
+   "text": "哪有一个人能帮我",
+   "avg_logprob": -0.4426,
+   "no_speech_prob": 0.6694
+  },
+  {
+   "start": 877.21,
+   "end": 893.46,
+   "text": "五票龙袍 黄浪木头",
+   "avg_logprob": -0.4056,
+   "no_speech_prob": 0.6274
+  },
+  {
+   "start": 893.46,
+   "end": 897.48,
+   "text": "我得去个货廊",
+   "avg_logprob": -0.4056,
+   "no_speech_prob": 0.6274
+  },
+  {
+   "start": 931.07,
+   "end": 933.66,
+   "text": "我在路上遇到个人",
+   "avg_logprob": -0.4056,
+   "no_speech_prob": 0.6274
+  },
+  {
+   "start": 933.66,
+   "end": 935.32,
+   "text": "我这我这",
+   "avg_logprob": -0.4056,
+   "no_speech_prob": 0.6274
+  },
+  {
+   "start": 935.32,
+   "end": 941.65,
+   "text": "不去了",
+   "avg_logprob": -0.4056,
+   "no_speech_prob": 0.6274
+  },
+  {
+   "start": 941.65,
+   "end": 942.89,
+   "text": "就是那俩",
+   "avg_logprob": -0.4056,
+   "no_speech_prob": 0.6274
+  },
+  {
+   "start": 971.98,
+   "end": 975.4,
+   "text": "小心衛尚",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 975.4,
+   "end": 976.6,
+   "text": "就這",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 978.96,
+   "end": 979.56,
+   "text": "我真的",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 979.56,
+   "end": 980.24,
+   "text": "吃花",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 980.24,
+   "end": 985.07,
+   "text": "包裹裹",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 988.58,
+   "end": 989.92,
+   "text": "不像",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 989.92,
+   "end": 990.72,
+   "text": "就這吧",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 990.72,
+   "end": 994.61,
+   "text": "吃飯了",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 994.61,
+   "end": 1015.24,
+   "text": "這兩回有個雷刀",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1015.24,
+   "end": 1016.92,
+   "text": "那我還是玩兒擴刀",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1016.92,
+   "end": 1021.03,
+   "text": "哇",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1021.03,
+   "end": 1027.84,
+   "text": "你把那個撿的那個魚啥的給我",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1027.84,
+   "end": 1029.68,
+   "text": "他沒有清雀魚",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1029.68,
+   "end": 1030.88,
+   "text": "打不了那個甲",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1030.88,
+   "end": 1036.64,
+   "text": "沒時間了嗎這個",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1036.64,
+   "end": 1037.4,
+   "text": "嗯",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1037.4,
+   "end": 1039.5,
+   "text": "回陽鏡",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1039.5,
+   "end": 1048.08,
+   "text": "讓我向前",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1048.08,
+   "end": 1048.68,
+   "text": "過來哪",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1048.68,
+   "end": 1053.66,
+   "text": "ELD",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1053.66,
+   "end": 1064.08,
+   "text": "我打個藥",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1064.08,
+   "end": 1065.4,
+   "text": "一中七",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1065.4,
+   "end": 1066.95,
+   "text": "玄武之勢",
+   "avg_logprob": -0.6237,
+   "no_speech_prob": 0.3765
+  },
+  {
+   "start": 1066.95,
+   "end": 1068.95,
+   "text": "剑剑剑剑剑剑剑能剑吗?",
+   "avg_logprob": -0.4212,
+   "no_speech_prob": 0.3215
+  },
+  {
+   "start": 1068.95,
+   "end": 1071.22,
+   "text": "嗯,不知道",
+   "avg_logprob": -0.4212,
+   "no_speech_prob": 0.3215
+  },
+  {
+   "start": 1071.22,
+   "end": 1075.78,
+   "text": "OK,好剑",
+   "avg_logprob": -0.4212,
+   "no_speech_prob": 0.3215
+  },
+  {
+   "start": 1075.78,
+   "end": 1083.38,
+   "text": "OK,谢谢米大",
+   "avg_logprob": -0.4212,
+   "no_speech_prob": 0.3215
+  },
+  {
+   "start": 1083.38,
+   "end": 1245.66,
+   "text": "独立",
+   "avg_logprob": -0.4212,
+   "no_speech_prob": 0.3215
+  },
+  {
+   "start": 1245.66,
+   "end": 1247.66,
+   "text": "要不然他那个龙咬一下",
+   "avg_logprob": -0.4212,
+   "no_speech_prob": 0.3215
+  }
+ ]
+}
