@@ -43,6 +43,28 @@ fi
 FF=$(cygpath -m "$FF")
 FFPROBE=$(cygpath -m "$FF_DIR/ffprobe.exe")
 
+# --- thread budget ------------------------------------------------------------
+# Measured on this box (Ryzen 7 7800X3D, 8 cores / 16 threads) against the real
+# filter chain below, 6 s of source, four runs:
+#
+#     -threads 0 -filter_threads 0     16.22 s   <- ffmpeg auto
+#     -threads 4 -filter_threads 4      9.15 s   <- 44% faster than auto
+#     -threads 8 -filter_threads 8     12.94 s
+#     -threads 8 -filter_threads 2     24.41 s   <- starving filters is very bad
+#
+# All four produced a byte-identical 3,918,241 B file, so this is output-neutral.
+#
+# Why it matters: ffmpeg's default is one thread per detected core PLUS frame-level
+# parallelism, which was observed spawning 83 threads on this 16-thread machine.
+# Oversubscribed threads fight each other and, more importantly, make the whole
+# desktop stutter while a render runs -- the user reported exactly that.  Capping
+# threads keeps the machine responsive without changing a single output byte.
+#
+# Override with NARAKA_FF_THREADS / NARAKA_FF_FILTER_THREADS when a task is
+# deliberately alone on the machine and wants the last drop of throughput.
+THREADS="${NARAKA_FF_THREADS:-4}"
+FILTER_THREADS="${NARAKA_FF_FILTER_THREADS:-4}"
+
 # --- read the cut list ------------------------------------------------------
 BOUNDS=$(powershell.exe -NoProfile -ExecutionPolicy Bypass \
   -File "$(cygpath -m "$PS_DIR/read_episode_bounds.ps1")" "$(cygpath -w "$MAP")" | tr -d '\r') || {
@@ -88,7 +110,8 @@ for ((i=0; i<N; i++)); do
   S="${STARTS[$i]}"; E="${ENDS[$i]}"
   SEG="$SEGDIR/seg_$i.mp4"
   echo "--- seg$i [$S,$E) -> $SEG" >> "$LOG_P"
-  "$FF" -hide_banner -y -v error -ss "$S" -to "$E" -i "$SRC_W" \
+  "$FF" -hide_banner -y -v error -threads "$THREADS" -filter_threads "$FILTER_THREADS" \
+    -ss "$S" -to "$E" -i "$SRC_W" \
     -vf "fps=60,scale=3840:2160:flags=lanczos,setsar=1,format=yuv420p" \
     -c:v h264_nvenc -preset p7 -tune hq -profile:v high -level:v 5.2 \
     -rc vbr -b:v 18M -maxrate 28M -bufsize 56M -g 120 -bf 2 \
@@ -100,7 +123,7 @@ for ((i=0; i<N; i++)); do
 done
 
 echo "--- concat -> $OUT" >> "$LOG_P"
-"$FF" -hide_banner -y -v error -f concat -safe 0 -i "$(cygpath -m "$LIST")" \
+"$FF" -hide_banner -y -v error -threads "$THREADS" -f concat -safe 0 -i "$(cygpath -m "$LIST")" \
   -c copy -movflags +faststart "$OUT_W" 2>>"$LOG_P" || { echo "CONCAT_FAIL exit=$?" >> "$LOG_P"; exit 1; }
 
 echo "--- clean master: no burned-in text, no embedded subtitle stream ---" >> "$LOG_P"

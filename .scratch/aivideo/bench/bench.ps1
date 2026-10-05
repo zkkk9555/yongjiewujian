@@ -4,6 +4,7 @@ param(
   [Parameter(Mandatory=$true)][string]$ENC,
   [string]$Iopt = '',
   [int]$Jobs = 1,
+  [switch]$Use4K,
   [int]$Repeat = 1,
   [switch]$Full240
 )
@@ -13,7 +14,9 @@ $ErrorActionPreference = 'Stop'
 $here  = $PSScriptRoot
 $FF    = (Get-ChildItem 'C:\Project' -Recurse -Filter 'ffmpeg.exe' -Depth 4 -ErrorAction SilentlyContinue |
            Where-Object { $_.FullName -like '*LosslessCut*' } | Select-Object -First 1).FullName
-$SRC   = (Get-ChildItem 'E:\OBS' -Filter '2026-10-04 15*.mp4' | Select-Object -First 1).FullName
+$SRCPR  = (Get-ChildItem 'E:\PR*' -Filter '809*.mp4' -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+$SRCOBS = (Get-ChildItem 'E:\OBS' -Filter '2026-10-04 15*.mp4' | Select-Object -First 1).FullName
+if ($Use4K) { $SRC = $SRCPR } else { $SRC = $SRCOBS }
 $outDir = Join-Path $here 'out'
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
