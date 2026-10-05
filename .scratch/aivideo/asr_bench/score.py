@@ -68,7 +68,7 @@ def main():
     print(f"REF {ref}: cues={len(rc)} segs={R['meta']['segments']} chars={len(rtext)} "
           f"decode={R['meta']['decode_wall_s']}s rf={R['meta']['realtime_factor']}x")
     print()
-    hdr = f"{'label':<28}{'model':<14}{'ct':<14}{'beam':<5}{'vad':<4}{'load_s':>7}{'dec_s':>8}{'rf_x':>7}{'segs':>6}{'chars':>7}{'logp':>8}{'charsim':>9}{'cues':>6}{'rec':>7}{'prec':>7}"
+    hdr = f"{'label':<28}{'model':<14}{'ct':<14}{'beam':<5}{'vad':<4}{'dec_s':>8}{'rf_x':>7}{'segs':>6}{'chars':>7}{'charsim':>9}{'cues':>6}{'rec12':>7}{'rec30':>7}{'prec':>7}"
     print(hdr)
     print("-" * len(hdr))
     for lab in [ref] + labels:
@@ -80,14 +80,16 @@ def main():
         m = D["meta"]
         cc = cues(D["segments"])
         t = flat(D["segments"])
-        matched = match(rc, cc)
-        rec = matched / len(rc) if rc else float("nan")
-        prec = matched / len(cc) if cc else float("nan")
+        m12 = match(rc, cc, 12.0)
+        m30 = match(rc, cc, 30.0)
+        rec12 = m12 / len(rc) if rc else float("nan")
+        rec30 = m30 / len(rc) if rc else float("nan")
+        prec = m12 / len(cc) if cc else float("nan")
         cs = charsim(rtext, t)
         print(f"{lab:<28}{m['model'][:13]:<14}{m['compute_type']:<14}{m['beam_size']:<5}"
-              f"{int(m['vad']):<4}{m['model_load_s']:>7}{m['decode_wall_s']:>8}{m['realtime_factor']:>7}"
-              f"{m['segments']:>6}{len(t):>7}{m['mean_avg_logprob']:>8}{cs:>9.3f}"
-              f"{len(cc):>6}{rec:>7.2f}{prec:>7.2f}")
+              f"{int(m['vad']):<4}{m['decode_wall_s']:>8}{m['realtime_factor']:>7}"
+              f"{m['segments']:>6}{len(t):>7}{cs:>9.3f}"
+              f"{len(cc):>6}{rec12:>7.2f}{rec30:>7.2f}{prec:>7.2f}")
 
 
 if __name__ == "__main__":

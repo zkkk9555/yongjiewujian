@@ -390,6 +390,148 @@ def gate_coverage_complete(
     )
 
 
+# --- deleted-interval voice audit -------------------------------------------------
+# 864 was rejected six times and then re-cut.  Re-measuring its delivered v6 shows
+# every already-delivered timeline has perfect coverage, so the dropped battle was
+# NOT "forgotten to declare" -- it was declared, cleanly, as a deletion.  The
+# coverage gate cannot see that.  This gate can: it is the only verified handle on
+# missed battles (83% precision on task 864).
+#
+# Deliberately an ABSENCE-audit gate, never a "no combat here" gate:
+#   hit a combat word inside a deleted interval -> a human must have signed a
+#   verdict with a reason and an on-disk evidence path -> else FAIL.
+# A "this interval contains no combat" gate would produce a confident, necessarily
+# wrong answer wearing a PASS, which is the exact failure mode this project keeps
+# paying for.
+#
+# Two tiers, because the working word list contains 打, which also fires on 打药
+# (healing) and 打开 (opening something).  Only STRONG words demand adjudication.
+DELETED_VOICE_STRONG = (
+    "杀", "击杀", "击败", "砍死", "大招", "闪避", "中刀", "倒地", "救", "被击",
+    "血量", "血条", "弹尽", "没弹", "预瞄", "听声", "射速", "操作", "追上",
+    "局势", "我来", "别急", "撤", "残血", "反打", "振刀", "格挡", "处决",
+    "第一", "第二", "胜利", "失败", "淘汰", "终结",
+)
+DELETED_VOICE_ADJUDICATION_MIN_REASON = 12
+
+
+def _deleted_voice_index(path: Path) -> list[dict] | None:
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    cues = doc.get("cues") if isinstance(doc, dict) else None
+    if not isinstance(cues, list):
+        return None
+    out: list[dict] = []
+    for cue in cues:
+        if not isinstance(cue, dict):
+            continue
+        try:
+            start = float(cue.get("start"))
+            end = float(cue.get("end"))
+        except (TypeError, ValueError):
+            continue
+        text = str(cue.get("text", ""))
+        hits = [w for w in DELETED_VOICE_STRONG if w in text]
+        if hits:
+            out.append({"start": start, "end": end, "text": text, "hits": hits})
+    return out
+
+
+def gate_deleted_voice_audit(
+    document: dict,
+    voice_index: Path | None,
+    evidence: str,
+) -> dict:
+    """Every strong combat-voice cue landing inside a deleted interval must carry
+    a human adjudication.  Unknown input -> WARN, never FAIL."""
+    if voice_index is None or not voice_index.is_file():
+        return check(
+            "deleted_voice_audit",
+            "WARN",
+            "no voice index supplied",
+            "pass --voice-index <combat_voice_index.json>",
+            evidence,
+        )
+    cues = _deleted_voice_index(voice_index)
+    if cues is None:
+        return check(
+            "deleted_voice_audit",
+            "WARN",
+            f"unreadable voice index: {voice_index.name}",
+            "naraka-voice-index/v1 with a cues[] array",
+            evidence,
+        )
+    deletions = _deleted_ranges(document)
+    if not deletions:
+        return check("deleted_voice_audit", "WARN", "no deleted_intervals", "kept + deleted tiles the source", evidence)
+
+    adjudications: list[dict] = []
+    raw_adj = document.get("deleted_voice_adjudications")
+    if isinstance(raw_adj, list):
+        adjudications = [item for item in raw_adj if isinstance(item, dict)]
+
+    def adjudicated(start: float, end: float) -> dict | None:
+        for adj in adjudications:
+            try:
+                a_start = float(adj.get("start"))
+                a_end = float(adj.get("end"))
+            except (TypeError, ValueError):
+                continue
+            overlap = min(end, a_end) - max(start, a_start)
+            span = min(end - start, a_end - a_start)
+            if span > 0 and overlap / span > 0.5:
+                return adj
+        return None
+
+    unadjudicated: list[str] = []
+    adjudicated_count = 0
+    for start, end, cat in deletions:
+        inside = [
+            cue for cue in cues
+            if min(end, cue["end"]) - max(start, cue["start"]) > 0.25
+        ]
+        if not inside:
+            continue
+        adj = adjudicated(start, end)
+        if adj is not None:
+            reason = str(adj.get("reason", "")).strip()
+            proof = str(adj.get("evidence", "")).strip()
+            if len(reason) >= DELETED_VOICE_ADJUDICATION_MIN_REASON and proof:
+                adjudicated_count += 1
+                continue
+            unadjudicated.append(
+                f"[{start:.2f},{end:.2f}] {cat} adjudication incomplete "
+                f"(reason {len(reason)} chars < {DELETED_VOICE_ADJUDICATION_MIN_REASON}"
+                f"{', no evidence path' if not proof else ''})"
+            )
+            continue
+        words = sorted({w for cue in inside for w in cue["hits"]})
+        unadjudicated.append(
+            f"[{start:.2f},{end:.2f}] {cat} carries {len(inside)} strong cue(s) {words} with no adjudication"
+        )
+
+    if unadjudicated:
+        return check(
+            "deleted_voice_audit",
+            "FAIL",
+            f"{len(unadjudicated)} deleted interval(s) need a signed verdict; first: "
+            + unadjudicated[0]
+            + (f" (+{len(unadjudicated) - 1} more)" if len(unadjudicated) > 1 else ""),
+            "each deleted interval containing strong combat voice needs "
+            "{start, end, reason>=12 chars, evidence=<on-disk path>} in deleted_voice_adjudications",
+            evidence,
+        )
+    return check(
+        "deleted_voice_audit",
+        "PASS",
+        f"{len(deletions)} deletions scanned; {adjudicated_count} carried signed verdicts",
+        "no unadjudicated strong combat voice inside a deletion",
+        evidence,
+    )
+
+
 def episode_bounds_present(episode: dict) -> bool:
     return "source_start" in episode and "source_end" in episode
 
@@ -634,6 +776,11 @@ def main() -> int:
         help="Legacy flag, kept for compatibility. Passing it FAILs the no-burn gate: burning is forbidden.",
     )
     parser.add_argument("--proxy-map", type=Path)
+    parser.add_argument(
+        "--voice-index",
+        type=Path,
+        help="naraka-voice-index/v1 produced by reports/tools/voice_index.py; enables deleted_voice_audit",
+    )
     parser.add_argument("--source-duration", type=float)
     parser.add_argument(
         "--whole-battle-strict",
@@ -669,6 +816,9 @@ def main() -> int:
     # Coverage runs even when the episode list is empty, because "no episodes"
     # used to skip every timeline gate and therefore reported green.
     checks.append(gate_coverage_complete(episodes, document, args.source_duration, str(args.timeline)))
+    # Only when a voice index is supplied: 864's re-measurement showed the dropped
+    # battle was cleanly *declared*, so coverage alone reports green.
+    checks.append(gate_deleted_voice_audit(document, args.voice_index, str(args.timeline)))
     ffprobe = args.ffprobe or shutil.which("ffprobe")
     probe = run_probe(ffprobe, args.preview) if args.preview else None
     preview_evidence = str(args.preview) if args.preview else "no preview"

@@ -3,12 +3,27 @@
 usage: python bench_fw.py <audio.wav> <outdir> <label> <model> <compute_type> <beam> <vad 0|1> [hotwords]
 Emits <outdir>/<label>.json  {meta, segments}
 """
-import json, os, sys, time, platform
+import json, os, sys, time, platform, subprocess
+
+
+def _ffmpeg_count():
+    """Contention marker: sibling sessions render with ffmpeg and starve the
+    CPU-side VAD/audio stage of faster-whisper, inflating wall clock badly."""
+    try:
+        out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq ffmpeg.exe", "/NH"],
+                             capture_output=True, text=True, timeout=20).stdout
+        return out.lower().count("ffmpeg.exe")
+    except Exception:
+        return -1
 
 MODELS = r"C:\Project\永劫无间\.video-tools\models"
 
 audio, outdir, label, model_name, ctype, beam, vad = sys.argv[1:8]
 hotwords = sys.argv[8] if len(sys.argv) > 8 else None
+# hotwords may be given as a path to a UTF-8 file (keeps non-ASCII out of .ps1)
+if hotwords and os.path.isfile(hotwords):
+    with open(hotwords, "r", encoding="utf-8") as fh:
+        hotwords = fh.read().strip()
 os.makedirs(outdir, exist_ok=True)
 
 from faster_whisper import WhisperModel
@@ -60,6 +75,7 @@ payload = {
         "speech_s": round(sum(d["end"] - d["start"] for d in data), 1),
         "mean_avg_logprob": round(sum(d["avg_logprob"] for d in data) / len(data), 4) if data else None,
         "python": platform.python_version(),
+        "ffmpeg_procs_during_run": _ffmpeg_count(),
     },
     "segments": data,
 }
