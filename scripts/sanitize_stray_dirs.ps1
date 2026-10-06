@@ -1,33 +1,44 @@
 ﻿<#
-    sanitize_stray_dirs.ps1  --  remove directories that were written OUTSIDE the
-    project sandbox, i.e. next to the project root instead of under 123\.
+    sanitize_stray_dirs.ps1  --  remove the mojibake directories that this project
+    accidentally created NEXT TO its own root instead of under 123\.
 
     Why this exists
     ---------------
     A .ps1 file saved as UTF-8 WITHOUT a BOM is decoded by PowerShell 5.1 with the
-    ANSI code page.  A Chinese project path in the source then turns into GBK
-    mojibake (e.g. 永劫无间 -> six wrong characters), and any New-Item / Set-Content
-    using that string builds its tree next to the real project:
+    ANSI code page (936 / GBK on this machine).  A Chinese project path in the source
+    then turns into GBK mojibake, and any New-Item / Set-Content using that string
+    builds its tree next to the real project:
 
         C:\Project\<mojibake>\123\<N>.<material>\...
 
-    The preflight reports this as a BLOCKER (it used to be a WARN and got ignored,
-    so it kept coming back).  This script is the cleanup the note points at.
+    The preflight reports this as a BLOCKER (it used to be a WARN and got ignored, so
+    it kept coming back).  This script is the cleanup the note points at.
 
-    Safety
-    ------
-      * The real project is identified by WHAT IS INSIDE IT (AGENTS.md +
-        .video-tools\ + 123\), never by its name -- the name is precisely the thing
-        that can be corrupted.
-      * -WhatIf prints the plan and changes nothing.  Default is also dry: you must
-        pass -Remove to actually delete.  Deleting outside the sandbox is a
-        destructive action, so it is never the default.
-      * Refuses to run if fewer than two directories are present, i.e. if the
-        "stray" identification would degenerate into "delete everything".
-      * Only ever touches directories that are direct children of the project's
-        parent and are not the project itself.
+    What it deletes -- and what it must never delete
+    -------------------------------------------------
+    ONLY directories whose name round-trips (ANSI bytes -> strict UTF-8) back to this
+    project's own name.  That is a proof of provenance, not a guess: nothing else can
+    produce that exact string.
 
-    Exit codes: 0 done (or nothing to do) | 1 refused / partial | 2 bad arguments
+    The first version of this script deleted every directory sitting next to the
+    project when given -Remove.  C:\Project\ is a SHARED parent -- it holds the user's
+    other projects and whatever empty folder they chose to make -- so the documented
+    remediation would have destroyed unrelated work.  Its predicate was "the name has
+    >= 4 CJK characters", which matches 云山巨城 and 全自动跑 perfectly well.
+
+    The judgement now lives in mojibake_guard.ps1, shared with the preflight so the two
+    can never disagree about what counts as ours.  This file only decides what to do
+    with each verdict.
+
+    Usage
+    -----
+        & scripts\sanitize_stray_dirs.ps1              # report only, changes nothing
+        & scripts\sanitize_stray_dirs.ps1 -Remove      # delete ONLY our mojibake dirs
+
+    Directories that are not ours are always listed with the reason they were skipped.
+    They are never deleted, not even when empty and not even with -Remove.
+
+    Exit codes: 0 done (or nothing of ours to clean) | 1 refused / partial | 2 bad arguments
 #>
 
 [CmdletBinding()]
@@ -46,83 +57,85 @@ if (-not (Test-Path -LiteralPath $ProjectRoot -PathType Container)) {
     [Console]::Error.WriteLine("[FAIL] project root not found: $ProjectRoot")
     exit 2
 }
-$ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path.TrimEnd('\')
-$ParentRoot  = Split-Path -Parent $ProjectRoot
+. (Join-Path $PSScriptRoot 'mojibake_guard.ps1')
 
-Say "Project root : $ProjectRoot"
-Say "Scanning     : $ParentRoot"
+$scan = $null
+try {
+    $scan = Get-ProjectMojibakeDirs -ProjectRoot $ProjectRoot
+} catch {
+    [Console]::Error.WriteLine("[FAIL] $($_.Exception.Message)")
+    exit 2
+}
+
+Say "Project root : $($scan.ProjectRoot)"
+Say "Scanning     : $($scan.ParentRoot)"
 Say ''
 
-# Identify the real project by its contents, never by its name.
-function Test-IsRealProject {
-    param([string]$Dir)
-    return ((Test-Path (Join-Path $Dir 'AGENTS.md')) -and
-            (Test-Path (Join-Path $Dir '.video-tools')) -and
-            (Test-Path (Join-Path $Dir '123')))
+# --- our mojibake ----------------------------------------------------------
+
+if ($scan.Ours.Count -eq 0) {
+    Say '[PASS] 没有本项目的乱码目录，无需清理。'
+} else {
+    $totalBytes = [int64]0
+    Say '=== 拟删除（本项目自己的路径被按 ANSI 读坏后产生的目录）==='
+    foreach ($p in $scan.Ours) {
+        $bytes = Measure-DirBytes -Path $p.Path
+        $totalBytes += $bytes
+        $kids = @(Get-ChildItem -LiteralPath $p.Path -Recurse -Force -ErrorAction SilentlyContinue)
+        Say ("  {0}" -f $p.Path)
+        Say ("     {0} 项 / {1:N1} MB" -f $kids.Count, ($bytes / 1MB))
+        Say ("     名字码位: {0}" -f (Format-CodePoints -Text $p.Name))
+        Say ("     判据    : {0}" -f $p.Reason)
+        $sample = @(Get-ChildItem -LiteralPath $p.Path -Recurse -Force -File -ErrorAction SilentlyContinue |
+                    Select-Object -First 3)
+        foreach ($smp in $sample) { Say ("       e.g. {0}" -f $smp.FullName) }
+    }
+    Say ("  合计 {0:N1} MB" -f ($totalBytes / 1MB))
+    Say ''
+    Say '[NOTE] 删掉之后请把肇事的那个 .ps1 重存为 UTF-8 with BOM，否则它会再造一个。'
+    Say ''
 }
 
-$children = @(Get-ChildItem -LiteralPath $ParentRoot -Directory -Force -ErrorAction SilentlyContinue)
-$real     = @($children | Where-Object { Test-IsRealProject $_.FullName })
-$strays   = @($children | Where-Object { -not (Test-IsRealProject $_.FullName) })
+# --- everything else: report, never touch -----------------------------------
 
-if ($real.Count -ne 1) {
-    [Console]::Error.WriteLine("[FAIL] expected exactly 1 real project under $ParentRoot, found $($real.Count). Refusing to guess.")
-    exit 1
-}
-if ($strays.Count -eq 0) {
-    Say "[PASS] nothing to clean -- $ParentRoot contains only the project."
-    exit 0
-}
-
-# --- plan -------------------------------------------------------------------
-
-$plan = New-Object System.Collections.ArrayList
-$totalBytes = [int64]0
-foreach ($s in $strays) {
-    $items = @(Get-ChildItem -LiteralPath $s.FullName -Recurse -Force -ErrorAction SilentlyContinue)
-    $files = @($items | Where-Object { -not $_.PSIsContainer })
-    $bytes = [int64]0
-    foreach ($f in $files) { $bytes += $f.Length }
-    [void]$plan.Add([pscustomobject]@{
-        Path = $s.FullName; Name = $s.Name; Items = $items.Count; Files = $files.Count; Bytes = $bytes
-    })
-    $totalBytes += $bytes
-}
-
-Say '=== 拟清理清单（项目沙箱之外的目录）==='
-foreach ($p in $plan) {
-    Say ("  {0}" -f $p.Path)
-    Say ("     {0} 项 / {1} 个文件 / {2:N1} MB" -f $p.Items, $p.Files, ($p.Bytes / 1MB))
-    $cps = ($p.Name.ToCharArray() | ForEach-Object { '{0:X4}' -f [int]$_ }) -join ' '
-    Say ("     名字码位: {0}" -f $cps)
-    $sample = @(Get-ChildItem -LiteralPath $p.Path -Recurse -Force -File -ErrorAction SilentlyContinue |
-                Select-Object -First 3)
-    foreach ($smp in $sample) { Say ("       e.g. {0}" -f $smp.FullName) }
-}
-Say ("  合计 {0:N1} MB" -f ($totalBytes / 1MB))
-Say ''
-
-$looksMojibake = @($plan | Where-Object {
-    # The real project name is 4 CJK chars; mojibake of a UTF-8 path shows up as a
-    # different, usually 6-character CJK run.  Flag it, do not decide it.
-    ($_.Name.ToCharArray() | Where-Object { [int]$_ -gt 0x4E00 -and [int]$_ -lt 0xA000 }).Count -ge 4
-})
-if ($looksMojibake.Count -gt 0) {
-    Say '[NOTE] 上面这些名字看着像中文路径乱码：多半是某个 .ps1 存成了 UTF-8 无 BOM，'
-    Say '       PowerShell 5.1 按 ANSI 读源码把路径读坏了。删掉之后请把该脚本重存为 UTF-8 with BOM。'
+if ($scan.Foreign.Count -gt 0 -or $scan.ProjectItself.Count -gt 0) {
+    Say '=== 不动（不是本项目的乱码，与本次清理无关）==='
+    foreach ($p in $scan.ProjectItself) {
+        Say ("  [项目本体] {0}" -f $p.Path)
+    }
+    foreach ($p in $scan.Foreign) {
+        Say ("  [别的目录] {0}" -f $p.Path)
+        Say ("       保留原因: {0}" -f $p.Reason)
+    }
     Say ''
 }
 
 if (-not $Remove) {
-    Say '[WHATIF] 未删除任何东西。确认上面清单无误后，加 -Remove 真正执行：'
-    Say "        & '$PSCommandPath' -Remove"
+    Say '[WHATIF] 未删除任何东西。'
+    if ($scan.Ours.Count -gt 0) {
+        Say '        确认上面「拟删除」清单无误后，加 -Remove 真正执行：'
+        Say "        & '$PSCommandPath' -Remove"
+    }
     exit 0
 }
 
-# --- delete -----------------------------------------------------------------
+if ($scan.Ours.Count -eq 0) {
+    Say '[DONE] 没有可删的东西 —— 上面列出的目录一个都没动。'
+    exit 0
+}
+
+# --- delete our mojibake only ------------------------------------------------
 
 $failed = New-Object System.Collections.ArrayList
-foreach ($p in $plan) {
+foreach ($p in $scan.Ours) {
+    # Re-verify immediately before deleting.  Cheap, and it means the verdict that
+    # authorises the delete is the one computed at delete time, not a stale copy.
+    $recheck = Test-ProjectMojibakeDir -Dir (Get-Item -LiteralPath $p.Path) -ProjectRoot $scan.ProjectRoot
+    if (-not $recheck.IsProjectMojibake) {
+        [void]$failed.Add("$($p.Path): verdict changed on recheck -- skipped")
+        Say "  SKIPPED  $($p.Path): $($recheck.Reason)"
+        continue
+    }
     try {
         Remove-Item -LiteralPath $p.Path -Recurse -Force -ErrorAction Stop
         Say "  removed  $($p.Path)"
@@ -132,12 +145,11 @@ foreach ($p in $plan) {
     }
 }
 
-$stillThere = @($plan | Where-Object { Test-Path -LiteralPath $_.Path })
+$stillThere = @($scan.Ours | Where-Object { Test-Path -LiteralPath $_.Path })
 $stillCount = $stillThere.Count
 Say ''
 if ($failed.Count -eq 0 -and $stillCount -eq 0) {
-    Say "[DONE] 清理完成。回收 $([math]::Round($totalBytes/1MB,1)) MB。"
-    Say '       现在重跑 scripts\check_video_environment.ps1 应回到 ok=8 warn=0 blocker=0。'
+    Say "[DONE] 清理完成。重跑 scripts\check_video_environment.ps1 应回到 blocker=0。"
     exit 0
 }
 Say "[PARTIAL] 仍有 $stillCount 个未清掉，请手工检查。"

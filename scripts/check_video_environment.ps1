@@ -277,33 +277,44 @@ if ($badEncoding.Count -gt 0) {
 # --- Stray-directory guard ---------------------------------------------------
 #
 # Everything the workflow produces belongs under 123\<N>.<material>.  A sibling
-# directory next to the project root means something wrote outside its sandbox
-# -- historically a mojibake path.  Identify the real project by what is inside
-# it, never by its name (the name is exactly what may be corrupted).
+# directory next to the project root means something wrote outside its sandbox.
+# Historically a mojibake path.  Identify the real project by what is inside it,
+# never by its name (the name is exactly what may be corrupted).
+#
+# ONLY our own mojibake is a BLOCKER.  The project's parent is a shared directory
+# holding the user's other projects plus whatever empty folder they chose to make,
+# and every one of those used to raise a BLOCKER here -- which both cried wolf and
+# pointed at a remediation (sanitize_stray_dirs.ps1 -Remove) that would have deleted
+# them.  The verdict comes from mojibake_guard.ps1 so this file and that one can
+# never disagree about what counts as ours.
 $ParentRoot = Split-Path -Parent $ProjectRoot
-$strays = New-Object System.Collections.ArrayList
-foreach ($d in (Get-ChildItem -LiteralPath $ParentRoot -Directory -Force -ErrorAction SilentlyContinue)) {
-    if ($d.FullName -eq $ProjectRoot) { continue }
-    $isRealProject = (Test-Path (Join-Path $d.FullName 'AGENTS.md')) -and
-                      (Test-Path (Join-Path $d.FullName '.video-tools')) -and
-                      (Test-Path (Join-Path $d.FullName '123'))
-    if (-not $isRealProject) {
-        $kids = @(Get-ChildItem -LiteralPath $d.FullName -Recurse -Force -ErrorAction SilentlyContinue)
-        $bytes = [int64]0
-        foreach ($k in $kids) { if (-not $k.PSIsContainer) { $bytes += $k.Length } }
-        [void]$strays.Add(("{0} ({1} items, {2} B)" -f $d.FullName, $kids.Count, $bytes))
+$strayScan = $null
+$strayScanError = $null
+try {
+    if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'mojibake_guard.ps1'))) {
+        throw 'mojibake_guard.ps1 is missing next to this script'
     }
+    . (Join-Path $PSScriptRoot 'mojibake_guard.ps1')
+    $strayScan = Get-ProjectMojibakeDirs -ProjectRoot $ProjectRoot
+} catch {
+    $strayScanError = $_.Exception.Message
 }
-if ($strays.Count -gt 0) {
-    # BLOCKER, not WARN.  This recurred repeatedly as a WARN and was ignored every
-    # time, so a stray directory kept reappearing at the project root's parent.
-    # Almost always it is a mojibake path: a .ps1 saved without a UTF-8 BOM makes
-    # PowerShell 5.1 decode the Chinese project path as ANSI, and the whole output
-    # tree lands next to the real project instead of inside it.
-    Add-Result 'BLOCKER' 'stray dirs beside project' ("STOP: something wrote outside the sandbox. Directories that sit next to the project root and are not the project: " + ($strays -join ' | '))
-    Add-Result 'NOTE' 'stray dirs beside project' "do NOT delete them blindly. Inspect first (a mojibake name means a script was run without a UTF-8 BOM). Then run: & 'C:\Project\永劫无间\scripts\sanitize_stray_dirs.ps1' -WhatIf   (drop -WhatIf to actually remove)"
+
+if ($null -ne $strayScanError) {
+    # Cannot prove the sandbox is intact, so do not claim it is -- but this is not the
+    # signature of the BOM bug and not a reason to stop a roughcut.
+    Add-Result 'WARN' 'stray dir check' "could not classify directories beside the project: $strayScanError"
+    Add-Result 'NOTE' 'stray dir check' 'run scripts\sanitize_stray_dirs.ps1 by hand to see the verdict per directory'
+} elseif ($strayScan.Ours.Count -gt 0) {
+    # BLOCKER, not WARN.  This recurred repeatedly as a WARN and was ignored every time.
+    # A .ps1 saved without a UTF-8 BOM makes PowerShell 5.1 decode the Chinese project
+    # path as ANSI, and the whole output tree lands next to the real project.
+    $names = @($strayScan.Ours | ForEach-Object { '{0} ({1})' -f $_.Path, $_.Reason })
+    Add-Result 'BLOCKER' 'our mojibake dir beside project' ('STOP: something wrote outside the sandbox. These are this project own path mis-decoded as ANSI: ' + ($names -join ' | '))
+    Add-Result 'NOTE' 'our mojibake dir beside project' "do NOT delete them by hand. Fix the .ps1 that created it (save as UTF-8 with BOM), then run: & 'C:\Project\永劫无间\scripts\sanitize_stray_dirs.ps1'   (it deletes only these; other directories beside the project are never touched)"
 } else {
-    Add-Result 'PASS' 'no stray dirs beside project' ("{0} contains only the project" -f $ParentRoot)
+    $other = $strayScan.Foreign.Count
+    Add-Result 'PASS' 'no stray dirs beside project' ("nothing of ours beside {0}; {1} unrelated director{2} present and deliberately untouched" -f $ParentRoot, $other, $(if ($other -eq 1) { 'y' } else { 'ies' }))
 }
 
 # --- Project-root hygiene ----------------------------------------------------
