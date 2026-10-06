@@ -20,7 +20,7 @@ Read the file at the referenced path. The user will normally pass the path or th
 
 ## Wayfinding operations
 
-Used by `/wayfinder` (project-local: `C:\Project\永劫无间\skills\wayfinder\SKILL.md`). The **map** is a file with one **child** file per ticket.
+Used by the `wayfinder` skill — a user-level engineering skill, so **load it by name with the skill tool; there is no project-local copy** (see `AGENTS.md` § Skill 来源分两类). The **map** is a file with one **child** file per ticket.
 
 - **Map**: `.scratch/<effort>/map.md` (the Notes / Decisions-so-far / Fog body).
 - **Child ticket**: `.scratch/<effort>/issues/NN-<slug>.md`, numbered from `01`, with the question in the body. A `Type:` line records the ticket type (`research`/`prototype`/`grilling`/`task`); a `Status:` line records `claimed`/`resolved`.

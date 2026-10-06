@@ -1,4 +1,4 @@
-<#
+﻿<#
     read_episode_bounds.ps1  --  print the cut list of a combat-episode timeline.
 
     Why this exists

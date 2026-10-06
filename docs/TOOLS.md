@@ -37,16 +37,18 @@ C:\Project\永劫无间\.video-tools\venv\Scripts\scenedetect.exe
 
 `librosa` 用于 BGM 的 BPM、节拍和起音分析；`OpenTimelineIO` 用于保存可重建的多轨编辑时间线。它们是生产级高质量工作流新增的共享依赖，不需要按任务重复安装。
 
-## 项目内 skills（随项目走，不用用户级）
+## 项目内 skills（项目资产，随项目走）
 
-下面两个已随项目存放在 `C:\Project\永劫无间\skills\`，不再读取任何用户级 skill 目录：
+下面两个是**本项目资产**，存放于项目内 `skills\`，是唯一来源，**不在任何用户级 skill 目录里维护副本**：
 
 ```text
-C:\Project\永劫无间\skills\ffmpeg-analyse-video-skill\SKILL.md
-C:\Project\永劫无间\skills\ffmpeg-video-editor\SKILL.md
+skills\ffmpeg-analyse-video-skill\SKILL.md
+skills\ffmpeg-video-editor\SKILL.md
 ```
 
-它们提供“如何分析视频”和“如何构造 FFmpeg 剪辑命令”的操作规范；项目内的 `.video-tools\venv` 提供实际执行所需的 Python 工具。未来对话直接按项目路径读取并使用这些 skill，再调用项目固定环境。`autopilot` 及其 25 个子 skill 同样已随项目存放（`skills\autopilot\` 等），按项目路径直接读取，不再依赖用户级目录。
+它们提供"如何分析视频"和"如何构造 FFmpeg 剪辑命令"的操作规范；项目内的 `.video-tools\venv` 提供实际执行所需的 Python 工具。未来对话按项目相对路径读取并使用这些 skill，再调用项目固定环境。
+
+工程开发类 skill（`autopilot` 及其子 skill、`issue-tracker` / `domain` 类）是**用户级通用工具**，由 harness 的用户级 skill 目录提供，**用 skill 工具按名字加载**，本项目不存放也不修改它们的副本。两类 skill 的判据与读法见 `AGENTS.md` 的 **Skill 来源分两类**。
 
 ## FFmpeg 和 FFprobe
 

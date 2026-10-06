@@ -19,7 +19,14 @@
 
 所有新任务直接创建在 `123\<编号>.<素材文件名>`，不经过其他任务目录。
 
-`skills\naraka-highlight-studio` 是本项目专属 skill 的唯一来源。它只在本项目内维护和迭代，不复制到任何用户级 skill 目录；处理本项目的视频任务时，按该项目路径读取它。所有 skill（含 `autopilot` 及其子 skill、`ffmpeg-analyse-video-skill`、`ffmpeg-video-editor`）均已随项目存放在 `skills\` 下，按项目路径直接读取，不再读取任何用户级 skill 目录。
+本项目的 skill 分两类，**判据是「这份 skill 的规格是否只对本项目成立」**：
+
+| 类别 | 内容 | 存放位置 |
+|---|---|---|
+| **项目资产** | `naraka-highlight-studio`、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源**。只在本项目内维护和迭代，**不复制到任何用户级 skill 目录**；处理本项目的视频任务时按项目相对路径 `skills\<name>\SKILL.md` 读取 |
+| **用户级工具** | `autopilot` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录。**用 skill 工具按名字加载**，本项目不存放、不修改副本 |
+
+项目资产要用 harness 支持的方式登记一遍才会被发现（各家发现路径不同）。**若哪天项目 skill 集体不显示，先查这一项。** 详见 `AGENTS.md` 的 **Skill 来源分两类**。
 
 ## 素材和结果目录
 

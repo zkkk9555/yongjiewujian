@@ -10,7 +10,7 @@ How the engineering skills should consume this repo's domain documentation when 
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
-> Project-local resolution: in this repo these skills live under `C:\Project\永劫无间\skills\` (`domain-modeling\SKILL.md`, `grill-with-docs\SKILL.md`, `improve-codebase-architecture\SKILL.md`). Read them by project path, not from any user-level skills directory.
+> Skill resolution: `domain-modeling`, `grill-with-docs` and `improve-codebase-architecture` are user-level engineering skills, not project assets. **Load them by name with the skill tool**; this repo holds no copy of them (see `AGENTS.md` § Skill 来源分两类).
 
 ## File structure
 

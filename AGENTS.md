@@ -188,7 +188,23 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 
 ### Autopilot
 
-后续工程开发默认使用项目内 `autopilot` 全自动流程（`C:\Project\永劫无间\skills\autopilot\SKILL.md`）：理解、spec、拆票、构建、验证一轮走完；只有破坏性、对外可见或变更范围的决策才停下找人。视频剪辑仍以本文件和 `naraka-highlight-studio` 为准，autopilot 只用于项目本身的代码/文档修正。项目内 `skills\` 是所有 skill 的唯一来源，不再读取任何用户级 skill 目录；autopilot 的 25 个子 skill 与 ffmpeg 两个 skill 均已随项目存放，按项目路径直接读取。本项目跑 autopilot 时不写中央日志、不建任务标记（见 `docs/agents/autopilot-local.md` 项目本地化覆盖）。
+后续工程开发默认使用 `autopilot` 全自动流程：理解、spec、拆票、构建、验证一轮走完；只有破坏性、对外可见或变更范围的决策才停下找人。视频剪辑仍以本文件和 `naraka-highlight-studio` 为准，autopilot 只用于项目本身的代码/文档修正。
+
+**用 skill 工具按名字加载它，不要手抄绝对路径**——autopilot 及其子 skill 是用户级通用工程工具，由 harness 的用户级 skill 目录提供，本项目不存放也不修改副本。本项目跑 autopilot 时不写中央日志、不建任务标记（见 `docs/agents/autopilot-local.md` 项目本地化覆盖）。
+
+### Skill 来源分两类（2026-10-06 起）
+
+这个项目里 skill 有两个来源，**混为一谈会读错文件**，判据是「这份 skill 的规格是否只对本项目成立」：
+
+| 类别 | 内容 | 存放位置 | 怎么读 |
+|---|---|---|---|
+| **项目资产** | `naraka-highlight-studio`、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源** | 按项目相对路径 `skills\<name>\SKILL.md`；**不要在任何用户级 skill 目录里安装、复制或维护同名副本** |
+| **用户级工具** | `autopilot` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录 | **用 skill 工具按名字加载**；本项目不存放、不修改其副本 |
+
+两条补充：
+
+1. **项目资产要用 harness 支持的方式登记一遍**，否则多数 harness 不会去项目根裸目录 `skills\` 里找（各家发现路径不同：`.<harness>/skills`、`.claude/skills`、`.agents/skills` 或配置项）。本机 opencode 的做法是在项目根 `opencode.json` 写 `"skills": ["./skills"]`。**若哪天项目 skill 集体不显示，先查这一项还在不在**，别急着把规则抄进别处。
+2. **2026-10-06 之前项目 skill 集体隐形**，`docs\粗剪提示词.md` 因此被迫膨胀到 211 行当加载器。修好之后那份文件才薄回触发器。**别把它改回去。**
 
 ## 8. 高质量批量成片工作流
 
@@ -202,10 +218,7 @@ C:\Project\永劫无间\skills\naraka-highlight-studio\SKILL.md
 
 该 skill 的规范来源只有项目内这一个路径。不要在用户级 skill 目录再安装、复制或维护一份同名 skill。
 
-**2026-10-05 起：项目 29 个 skill 已全部可见**（`opencode.json` 的 `"skills": ["./skills"]`）。
-此前项目根的 `skills\` **不是 opencode 的发现路径**，导致 skill 列表里一个项目 skill 都不显示——
-`docs\粗剪提示词.md` 那 211 行因此被迫当加载器用（那不是规格书，是加载器）。
-若哪天 skill 又不显示了，先查 `opencode.json` 是否还在项目根（opencode 只搜当前目录及其祖先）。
+> 本项目的 skill 分两类（项目资产 / 用户级工具），判据与读法见上文 **Skill 来源分两类**。
 
 稳定规则写在 skill 中，个人风格写在 `style_profiles`，素材索引写在 `assets`，用户反馈写在 `feedback`。不要把某一首当前热门歌曲或一次性的特效偏好写死为永久规则。
 
