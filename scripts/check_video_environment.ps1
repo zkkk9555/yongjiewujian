@@ -305,16 +305,27 @@ if ($null -ne $strayScanError) {
     # signature of the BOM bug and not a reason to stop a roughcut.
     Add-Result 'WARN' 'stray dir check' "could not classify directories beside the project: $strayScanError"
     Add-Result 'NOTE' 'stray dir check' 'run scripts\sanitize_stray_dirs.ps1 by hand to see the verdict per directory'
-} elseif ($strayScan.Ours.Count -gt 0) {
-    # BLOCKER, not WARN.  This recurred repeatedly as a WARN and was ignored every time.
-    # A .ps1 saved without a UTF-8 BOM makes PowerShell 5.1 decode the Chinese project
-    # path as ANSI, and the whole output tree lands next to the real project.
-    $names = @($strayScan.Ours | ForEach-Object { '{0} ({1})' -f $_.Path, $_.Reason })
-    Add-Result 'BLOCKER' 'our mojibake dir beside project' ('STOP: something wrote outside the sandbox. These are this project own path mis-decoded as ANSI: ' + ($names -join ' | '))
-    Add-Result 'NOTE' 'our mojibake dir beside project' "do NOT delete them by hand. Fix the .ps1 that created it (save as UTF-8 with BOM), then run: & 'C:\Project\永劫无间\scripts\sanitize_stray_dirs.ps1'   (it deletes only these; other directories beside the project are never touched)"
 } else {
-    $other = $strayScan.Foreign.Count
-    Add-Result 'PASS' 'no stray dirs beside project' ("nothing of ours beside {0}; {1} unrelated director{2} present and deliberately untouched" -f $ParentRoot, $other, $(if ($other -eq 1) { 'y' } else { 'ies' }))
+    $oursList = @($strayScan.Ours)
+    $heavyList = @($strayScan.CorruptProven | Where-Object { $_.CorruptWitness.Contents.FileCount -gt 0 })
+    if ($oursList.Count -gt 0) {
+        # BLOCKER, not WARN.  This recurred repeatedly as a WARN and was ignored every time.
+        # A .ps1 saved without a UTF-8 BOM makes PowerShell 5.1 decode the Chinese project
+        # path as ANSI, and the whole output tree lands next to the real project.
+        $names = @($oursList | ForEach-Object { '{0} ({1})' -f $_.Path, $_.Reason })
+        Add-Result 'BLOCKER' 'our mojibake dir beside project' ('STOP: something wrote outside the sandbox. These are this project own path mis-decoded as ANSI: ' + ($names -join ' | '))
+        Add-Result 'NOTE' 'our mojibake dir beside project' "do NOT delete them by hand. Fix the .ps1 that created it (save as UTF-8 with BOM), then run: & 'C:\Project\永劫无间\scripts\sanitize_stray_dirs.ps1'   (it deletes only these; other directories beside the project are never touched)"
+    } elseif ($heavyList.Count -gt 0) {
+        # A name no codec can explain, carrying our clone shape, decoded content
+        # mentioning us, AND real files.  Tier-2 prune refuses it, and so does this
+        # gate: it needs a human, not a silent pass.
+        $names = @($heavyList | ForEach-Object { '{0} ({1} files / {2:N1} MB inside; {3} / {4})' -f $_.Path, $_.CorruptWitness.Contents.FileCount, ($_.CorruptWitness.Contents.Bytes / 1MB), $_.CorruptWitness.WitnessA, $_.CorruptWitness.WitnessB })
+        Add-Result 'BLOCKER' 'damaged dir needing human review' ('STOP: a directory beside the project is damaged beyond any codec AND carries our clone shape with real work inside: ' + ($names -join ' | '))
+        Add-Result 'NOTE' 'damaged dir needing human review' "run scripts\sanitize_stray_dirs.ps1 (report only) for the double-witness verdict, then decide by hand. Automatic pruning is refused for trees with files."
+    } else {
+        $other = $strayScan.Foreign.Count
+        Add-Result 'PASS' 'no stray dirs beside project' ("nothing of ours beside {0}; {1} unrelated director{2} present and deliberately untouched" -f $ParentRoot, $other, $(if ($other -eq 1) { 'y' } else { 'ies' }))
+    }
 }
 
 # --- Project-root hygiene ----------------------------------------------------

@@ -1,4 +1,4 @@
-$B = Join-Path $PSScriptRoot 'bench.ps1'
+﻿$B = Join-Path $PSScriptRoot 'bench.ps1'
 $E_BASE  = '-preset p7 -tune hq -profile:v high -level:v 5.2 -rc vbr -b:v 18M -maxrate 28M -bufsize 56M -g 120 -bf 2 -spatial-aq 1 -temporal-aq 1 -aq-strength 8 -pix_fmt yuv420p -r 60 -fps_mode cfr'
 $V_SLOW  = 'fps=60,scale=3840:2160:flags=lanczos,setsar=1,format=yuv420p'   # exactly what seg_render_master.sh does today
 $V_NOFPS = 'scale=3840:2160:flags=lanczos,setsar=1,format=yuv420p'          # same, minus the no-op fps=60

@@ -53,6 +53,16 @@ New-Dir $mojiName                                  | Out-Null   # OURS
 $mojiWithGit = New-Dir ($mojiName + 'X')                                # mojibake-ish BUT has .git
 New-Item -ItemType Directory -Path (Join-Path $mojiWithGit '.git') -Force | Out-Null
 
+# a SECOND parent, because corrupt names live or die by CorruptProven, and the scan
+# that produces CorruptProven needs exactly one real project in ITS parent.
+$wildFixture = Join-Path $fixture 'wildparent'
+New-Item -ItemType Directory -Path $wildFixture -Force | Out-Null
+$real2 = Join-Path $wildFixture $realName
+New-Item -ItemType Directory -Path $real2 -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $real2 '123')     -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $real2 '.video-tools') -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $real2 'AGENTS.md') -Value 'x' -Encoding UTF8
+
 $pass = 0; $fail = 0
 function Check { param([string]$Name, [bool]$Ok, [string]$Detail)
     if ($Ok) { $script:pass++; Write-Output ("  PASS  {0}" -f $Name) }
@@ -139,6 +149,54 @@ Check 'sanitize exits 0 when it did what it was asked' `
 & $sanitize -Remove -ProjectRoot $real *> $null
 Check 'a second -Remove with nothing of ours left deletes nothing' `
     ((Test-Path -LiteralPath (Join-Path $parent '云山巨城')) -and (Test-Path -LiteralPath (Join-Path $parent 'new blank folder'))) 'it deleted on an empty plan'
+
+Write-Output ''
+Write-Output '=== CORRUPT-NAME (U+FFFD path): double witness ==='
+$w = Test-NameCorruptDir -DirPath (Join-Path $wildFixture ('x' + [string][char]0xFFFD + 'x')) -ProjectName 'NoSuchProjectXYZ'
+Check 'a corrupt name WITHOUT our clone shape is not ours' `
+    (-not $w.IsOurs) "verdict = $($w.Reason)"
+Check 'the shape witness says why' `
+    ($w.WitnessA -match 'no 123') "witness A = $($w.WitnessA)"
+
+# now give it the shape (bare 123\ only) plus unrelated content.
+# A bare `123\` without a clone-shape task dir proves NOTHING (any project can have
+# a folder called 123) -- so this stays negative even with a file present.  Only a
+# `123\<digits>.xxx` task dir, or a file mentioning us, moves the needle.
+$shaped = Join-Path $wildFixture ('y' + [string][char]0xFFFD + 'y')
+New-Item -ItemType Directory -Path (Join-Path $shaped '123') -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $shaped 'notes.txt') -Value 'nothing to do with any project' -Encoding UTF8
+$w2 = Test-NameCorruptDir -DirPath $shaped -ProjectName $realName
+Check 'bare 123 without a task dir is not enough (stays negative)' `
+    (-not $w2.IsOurs) "verdict = $($w2.Reason)"
+
+# and shape + decoded content mentioning us: witnesses AGREE
+$ours2 = Join-Path $wildFixture ('z' + [string][char]0xFFFD + 'z')
+New-Item -ItemType Directory -Path (Join-Path $ours2 '123\26.fake') -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $ours2 '123\26.fake\log.txt') -Value ("path was $realName cloned here by the bug") -Encoding UTF8
+$w3 = Test-NameCorruptDir -DirPath $ours2 -ProjectName $realName
+Check 'shape + content mentioning us IS ours (witnesses agree)' `
+    $w3.IsOurs "verdict = $($w3.Reason)"
+Check 'the witness inventory is exact' `
+    ($w3.Contents.FileCount -eq 1 -and $w3.Contents.EmptyLeafShells.Count -ge 0) ("files = " + $w3.Contents.FileCount)
+
+# tier-2 end to end: empties get pruned, files survive, even under -Remove.
+# NOTE the runs below target wildparent (via real2's path), NOT $real's parent:
+# the corrupt-name fixtures live under wildparent, and a scan only sees the
+# siblings of the project it is given.  (An earlier version of this test passed
+# $real here, so tier-2 never ran and the assertions failed on a stale tree.)
+$shapedEmpty = Join-Path $wildFixture ('w' + [string][char]0xFFFD + 'w')
+New-Item -ItemType Directory -Path (Join-Path $shapedEmpty '123\26.empty\cache') -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $shapedEmpty '123\26.empty\shots') -Force | Out-Null
+& $sanitize -Remove -ProjectRoot (Join-Path $wildFixture $realName) *> $null
+$removeExitTier2 = $LASTEXITCODE
+Check 'tier-2 prunes the empty clone leaves' `
+    ((-not (Test-Path -LiteralPath (Join-Path $shapedEmpty '123\26.empty\cache'))) -and (-not (Test-Path -LiteralPath (Join-Path $shapedEmpty '123\26.empty\shots')))) 'empty leaves survived -Remove'
+Check 'tier-2 leaves the file-carrying tree standing' `
+    (Test-Path -LiteralPath (Join-Path $ours2 '123\26.fake\log.txt')) 'a file was deleted by tier-2'
+Check 'tier-2 never deletes the damaged top dir itself' `
+    ((Test-Path -LiteralPath $shapedEmpty) -and (Test-Path -LiteralPath $ours2)) 'a corrupt top dir was deleted'
+Check 'a file-carrying double-witness tree forces a REVIEW exit (not 0)' `
+    ($removeExitTier2 -eq 1) "exit = $removeExitTier2, expected 1 (REVIEW)"
 
 Write-Output ''
 Write-Output ("=== {0} passed, {1} failed ===" -f $pass, $fail)
