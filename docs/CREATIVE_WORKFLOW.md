@@ -4,10 +4,10 @@
 
 用户只需要提供素材路径并对成片反馈。Agent 负责素材整理、当前任务的 BGM 选择、战斗事件分析、节奏编排、音效与特效、质量检查和最终导出。中间分析文件保存在编号任务目录内，默认不要求用户参与开发过程。
 
-专属 skill 原型：
+专属 skill（精剪；粗剪先行走 `cujian` 并冻结，本 skill 输入必须为冻结粗剪线）：
 
 ```text
-C:\Project\永劫无间\skills\naraka-highlight-studio\SKILL.md
+C:\Project\永劫无间\skills\jingjian\SKILL.md
 ```
 
 ## 批量输入
@@ -84,14 +84,14 @@ C:\Project\永劫无间\style_profiles\high_energy_v1.json
 
 ## 最终交付和内部重建能力
 
-用户默认收到：
+成片正本双轨归属（直渲交付目录，不进任务目录）：
 
 ```text
-master_*.mp4
-review.mp4
+E:\Cujian导出\<源文件名> cujian.mp4     # 粗剪冻结重建（cujian 产出）
+E:\Cujian导出\<源文件名> jingjian.mp4   # 精剪高燃包装（jingjian 产出）
 ```
 
-项目内部同时保留：
+项目内部同时保留（内部保留清单见 jingjian deliverspec `skills/jingjian/references/deliverables-and-qa.md`）：
 
 ```text
 source_probe.json

@@ -113,17 +113,10 @@ Windows PowerShell 5.1 读 `.ps1` 文件时，**没有 BOM 就按系统 ANSI 码
 `C:\Project\永劫无间\...`，被读成 `C:\Project\<乱码名>\`，整棵目录树（12 个空目录）建到了项目外面。
 码位可证：UTF-8 的 `永劫无间`（12 字节）按 GBK 解码正好是那 6 个乱码字符。
 
-**清理方法**：不要手打乱码名字（手打也会被搞坏，可能再造一个）。按内容特征识别真项目，
-删掉不是真项目的那些：
-
-```powershell
-$dirs = Get-ChildItem -LiteralPath 'C:\Project' -Directory -Force
-$junk = $dirs | Where-Object {
-    -not ((Test-Path (Join-Path $_.FullName 'AGENTS.md')) -and
-          (Test-Path (Join-Path $_.FullName '.video-tools')))
-}
-$junk | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force }
-```
+**清理方法**：不要手打乱码名字（手打也会被搞坏，可能再造一个）。
+只跑 `sanitize_stray_dirs.ps1` 看清单（默认干跑，只打印不删），找出肇事的 `.ps1`
+把它重存为 UTF-8 with BOM，确认无用后、人点头后才加 `-Remove`，见 `AGENTS.md §1`。
+别自己 `Remove-Item`，也别动清单里“不动”那一栏的任何东西。
 
 预检的 `[PASS] no stray dirs beside project` 就是按这个逻辑判断的，所以这类垃圾以后当场会被点名。
 （**注**：2026-10-06 起这条判据收窄为「只认本项目路径的反解乱码」——
@@ -226,9 +219,10 @@ command = $PY -m venv C:\Project\永劫无间\.video-tools\venv
 2. 是不是在**子进程**里跑的？PowerShell 调用策略可能拦住 `.ps1`（报「禁止运行脚本」）。用 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` 或 `powershell -ExecutionPolicy Bypass -File ...`。
 3. 是不是**控制台编码**把中文路径显示成乱码，导致你误判路径不存在？加 `[Console]::OutputEncoding = [Text.Encoding]::UTF8`。
 
-## 预检报 “python interpreter: EXISTS but CANNOT START”
+## 预检报 “python interpreter: EXISTS but CANNOT START”（历史，2026-09-29 前）
 
-这是当前项目的**已知真实状态**（2026-09-29），不是新故障：项目 venv 的 `python.exe` 文件还在，但它依赖的基础解释器（原 `~\.cache\codex-runtimes\...`）已被系统清理，所以起不来。
+> **历史记录**：这是 2026-09-29 修复前的已知状态，现已解决（见上一节）。
+> 当前真实状态以预检输出为准，不要凭本节假设工具不可用。
 
 后果：faster-whisper / PySceneDetect / Auto-Editor 全部不可用，**字幕做不了**。模型权重本身没丢。
 
@@ -353,7 +347,7 @@ foreach ($h in ($holes | Sort-Object Start)) { $h.Start; $h.End }
 3. 手算 `Σ(end − start) − Σ(hole.end − hole.start)`，与前两步对账。
 
 三者一致就说明**渲染是对的、门禁算错了**，别去改时间线。规则现已写进
-`skills/naraka-highlight-studio/references/complete-combat-roughcut.md`
+`skills/cujian/references/complete-combat-roughcut.md`
 （`excluded_inside`：段内挖洞与节目时长公式），两处实现由
 `scripts\test_insegment_holes.sh` 锁一致性、`scripts\test_hole_render_e2e.sh` 做端到端验证。
 

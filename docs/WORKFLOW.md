@@ -9,13 +9,12 @@
 C:\Project\永劫无间\123\<编号>.<素材文件名>
 ```
 
-该目录是任务的唯一输出目录：初检结果、候选清单、字幕、源时间线、联系表、低清预览、修订版和最终成片全部放在这里。原始素材保持在 `E:\OBS` 或 `E:\PR导出`，不复制、不覆盖。
+该目录是任务的过程物唯一输出目录：初检结果、候选清单、字幕、源时间线、联系表、低清预览、修订版放在这里；成片正本直渲 E 盘双轨（粗剪 ` cujian.mp4` / 精剪 ` jingjian.mp4`），任务目录仅留副本/记录，见 `AGENTS.md §7.1`。原始素材保持在 `E:\OBS` 或 `E:\PR导出`，不复制、不覆盖。
 
-当任务包含多把对局、本地 BGM、卡点、特效或“只交付成片”要求时，转入项目内的生产级 skill：[skills/naraka-highlight-studio/SKILL.md](../skills/naraka-highlight-studio/SKILL.md)。本文件保留基础分析和渲染约束，生产级 skill 在其上增加批次清单、事件时间线、音乐节拍、效果配方、缓存和质量门禁。
+当任务包含多把对局、本地 BGM、卡点、特效或“只交付成片”要求时，转入项目内的精剪 skill：[skills/jingjian/SKILL.md](../skills/jingjian/SKILL.md)（粗剪先行走 `cujian` 并冻结，`jingjian` 输入必须为冻结粗剪线）。本文件保留基础分析和渲染约束，精剪 skill 在其上增加批次清单、事件时间线、音乐节拍、效果配方、缓存和质量门禁。
 
-如果目标是“把每一场战斗完整截出来的高质量粗剪”，使用该 skill 的
-`complete_combat_roughcut` 模式，并读取
-`skills/naraka-highlight-studio/references/complete-combat-roughcut.md`。
+如果目标是“把每一场战斗完整截出来的高质量粗剪”，使用 `cujian`，并读取
+`skills/cujian/references/complete-combat-roughcut.md`。
 这个模式把完整战斗作为最小剪辑单位，战斗未出现明确结果前不得转场；
 它与“只截精彩瞬间”的高燃成片模式不同。
 
@@ -166,6 +165,8 @@ C:\Project\永劫无间\123\<编号>.<素材文件名>
 
 ## 阶段 7：最终渲染
 
+双轨归属：粗剪冻结重建 → `E:\Cujian导出\<源文件名> cujian.mp4`；精剪高燃包装 → `E:\Cujian导出\<源文件名> jingjian.mp4`。成片正本直渲 E 盘交付目录，不进任务目录（见 `skills/jingjian/references/deliverables-and-qa.md` Master ownership）。
+
 最终版必须从原始 MP4 按时间线重建。若源素材是 4K60 H.264 VBR，则默认保持：
 
 - 3840×2160；
@@ -180,6 +181,8 @@ C:\Project\永劫无间\123\<编号>.<素材文件名>
 最终版与预览一律干净画面：禁烧录、禁内嵌字幕流，字幕只以外挂 SRT 单独交付。渲染脚本 `scripts\seg_render_master.sh` **没有烧录开关**（原 `BURN=1` 分支已按项目铁律删除，且不得再加回来）。最终成片旁不保留同名外挂 SRT 的旧烧录防重规则已失效——现在根本不出烧录版，同名 SRT 即外挂字幕本体，按命名节正常保留在 `captions\` 异目录。
 
 ## 阶段 8：成片验收与收尾清理
+
+双轨归属：粗剪冻结重建 → `E:\Cujian导出\<源文件名> cujian.mp4`；精剪高燃包装 → `E:\Cujian导出\<源文件名> jingjian.mp4`。验收对 E 盘正本执行，任务目录仅留副本/记录（见 `skills/jingjian/references/deliverables-and-qa.md` Master ownership 与 Post-master cleanup）。
 
 出片不是终点。4K 成片落盘后固定走两步：
 
@@ -202,4 +205,4 @@ bash scripts/verify_master.sh <master_mp4> <expected_program_sec> <log_file>
 删 `preview\` `cache\` `shots\` `audio\`（全部可由源素材再生），保留任务目录本身与
 `timeline\` `reports\` `analysis\` `deliverables\` `captions\`。849 实测回收 3.38 GB / 共 3.39 GB，
 审计记录约 10 MB 全留。**不要整目录手删**——会连带删掉"为什么这么剪"的唯一依据，并导致编号复用。
-完整规则见 `AGENTS.md §7.1` 与 `skills/naraka-highlight-studio/references/deliverables-and-qa.md` 的 Post-master cleanup。
+完整规则见 `AGENTS.md §7.1` 与 `skills/jingjian/references/deliverables-and-qa.md` 的 Post-master cleanup。

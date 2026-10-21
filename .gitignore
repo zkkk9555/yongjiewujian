@@ -90,9 +90,9 @@ __pycache__/
 *.pyo
 
 # 注意：以下**必须**进版本库，不要加进忽略列表——
-#   *.py    skills\naraka-highlight-studio\scripts\ 下的 7 个分析/校验脚本是项目源码
-#   *.ps1   scripts\ 下 9 个门禁与工具脚本是项目源码
-#   *.sh    scripts\ 下 2 个 4K 渲染/验收脚本是项目源码
+#   *.py    skills\cujian\scripts\ 下的分析/校验脚本与 skills\jingjian\scripts\ 下的交付脚本是项目源码
+#   *.ps1   scripts\ 下 12 个门禁与工具脚本是项目源码
+#   *.sh    scripts\ 下 14 个 4K 渲染/验收与回归测试脚本是项目源码，外加 5 个 .py 测试/工具脚本
 #   *.md    AGENTS.md / README.md / docs\ / skills\ 全是规则与规格，本项目的核心
 #   *.json  config\ / style_profiles\ / timeline 的 cut list 都是规格
 # 唯一例外是 assets\ 下的真实素材（bgm/sfx/overlays/fonts）：

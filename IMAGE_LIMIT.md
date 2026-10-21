@@ -19,7 +19,7 @@
 ## 适用范围
 
 - 本条与模型名称无关：即使上游模型更换，50 张红线仍然有效。
-- 本文件位于项目根目录，与 `AGENTS.md §9`、`docs/WORKFLOW.md`、`skills/naraka-highlight-studio/references/complete-combat-roughcut.md` 保持一致；如有冲突以 50 张上限为准。
+- 本文件位于项目根目录，与 `AGENTS.md §9`、`docs/WORKFLOW.md`、`skills/cujian/references/complete-combat-roughcut.md` 保持一致；如有冲突以 50 张上限为准。
 
 ## 失败教训（回归记录）
 

@@ -17,7 +17,7 @@ set -uo pipefail
 cd '/c/Project/永劫无间' || exit 1
 
 PY='.video-tools/venv/Scripts/python.exe'
-MOD='skills/naraka-highlight-studio/scripts/orchestrator_state.py'
+MOD='skills/cujian/scripts/orchestrator_state.py'
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 

@@ -27,7 +27,7 @@ set -uo pipefail
 cd '/c/Project/永劫无间' || exit 1
 
 PY='.video-tools/venv/Scripts/python.exe'
-GATE='skills/naraka-highlight-studio/scripts/qa_gate.py'
+GATE='skills/cujian/scripts/qa_gate.py'
 TL='docs/lessons/examples/864_v6_combat_episodes.json'
 VI='123/21.864永劫无间 2026-09-30 02-57-13/analysis/combat_voice_index.json'
 TMP=$(mktemp -d)

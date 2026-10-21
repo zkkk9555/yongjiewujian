@@ -22,8 +22,8 @@ set -uo pipefail
 cd '/c/Project/永劫无间' || exit 1
 
 PY='.video-tools/venv/Scripts/python.exe'
-STATE='skills/naraka-highlight-studio/scripts/orchestrator_state.py'
-WATCH='skills/naraka-highlight-studio/scripts/watchdog.py'
+STATE='skills/cujian/scripts/orchestrator_state.py'
+WATCH='skills/cujian/scripts/watchdog.py'
 KIT='scripts/watchdog_testkit.py'
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT

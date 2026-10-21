@@ -27,6 +27,6 @@
 
 ## 车道映射
 
-- 视频剪辑任务：仍以 `AGENTS.md` + `naraka-highlight-studio` 为准，autopilot 不介入。
+- 视频剪辑任务：视频粗剪走 `cujian`，精剪走 `jingjian`（详见 `AGENTS.md`），autopilot 不介入。
 - 项目本身的代码/文档修正：autopilot 全自动（理解 → spec → 拆票 → 构建 → 验证），
   只有破坏性、对外可见或变更范围的决策停下找人。

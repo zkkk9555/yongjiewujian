@@ -35,7 +35,7 @@ set -uo pipefail
 cd '/c/Project/永劫无间' || exit 1
 
 PY='.video-tools/venv/Scripts/python.exe'
-AUTOM='skills/naraka-highlight-studio/scripts/auto_chain.py'
+AUTOM='skills/jingjian/scripts/auto_chain.py'
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
@@ -140,8 +140,13 @@ check "cleanup will not run after a failure" "render" \
     "$(read "d['authorization']['steps'][-1]" "$TMP/f.json")"
 
 # --- 6. the master destination is fixed and never overwritten --------------
+# 精剪链单轨断言，cujian 轨由粗剪冻结门覆盖（auto_chain 只跑精剪链）。
 check "master directory is the delivery folder" "E:\\Cujian导出" \
     "$("$PY" scripts/auto_chain_probe.py "$AUTOM" master_dir 2>&1)"
+check "精剪 master suffix is jingjian.mp4" " jingjian.mp4" \
+    "$("$PY" -c "import importlib.util,sys; s=importlib.util.spec_from_file_location('a',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(m.MASTER_SUFFIX)" "$AUTOM" 2>&1)"
+check "master filename builds the jingjian track" "855demo jingjian.mp4" \
+    "$("$PY" -c "import importlib.util,sys; s=importlib.util.spec_from_file_location('a',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(m.master_name('855demo'))" "$AUTOM" 2>&1)"
 check "an existing master is never overwritten" "refuse-overwrite" \
     "$("$PY" scripts/auto_chain_probe.py "$AUTOM" plan_output --master-exists yes 2>&1)"
 

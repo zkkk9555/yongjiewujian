@@ -9,7 +9,7 @@
 #     program_seconds = sum((source_end - source_start) - sum(hole.end - hole.start))
 #
 # is implemented twice on purpose: once in Python
-# (skills/naraka-highlight-studio/scripts/episode_geometry.py) for the QA gate
+# (skills/cujian/scripts/episode_geometry.py) for the QA gate
 # and the timeline validator, and once in PowerShell
 # (scripts/read_episode_bounds.ps1) because the 4K master path is deliberately
 # Python-free.  Two copies of one rule drift apart the moment someone edits one
@@ -25,7 +25,7 @@ set -uo pipefail
 
 PS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$PS_DIR/.." && pwd)"
-GATE_DIR="$ROOT/skills/naraka-highlight-studio/scripts"
+GATE_DIR="$ROOT/skills/cujian/scripts"
 PY="$ROOT/.video-tools/venv/Scripts/python.exe"
 [ -x "$PY" ] || PY="$(command -v python || command -v python3 || true)"
 if [ -z "$PY" ]; then

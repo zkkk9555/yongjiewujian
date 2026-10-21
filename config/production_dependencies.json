@@ -1,5 +1,5 @@
 {
-  "schema": "naraka-highlight-production-dependencies/v1",
+  "schema": "naraka-highlight-production-dependencies-archived/v1",
   "project_root": "C:\\Project\\永劫无间",
   "base_python": "%LOCALAPPDATA%\\Programs\\Python\\Python312\\python.exe",
   "base_python_rule": "A venv must be built on a NORMAL system interpreter. Never on a temp/cache/tool-runtime path -- one built under ~\\.cache\\ was destroyed by ordinary system cleanup and took 2.64 GB of working packages with it (AGENTS.md section 2, rule 2).",

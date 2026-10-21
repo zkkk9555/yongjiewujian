@@ -9,7 +9,7 @@
 | 项目根目录 | `C:\Project\永劫无间` | 脚本、说明文件和任务结果的工作区 |
 | OBS 原始素材 | `E:\OBS` | 只读，不在这里写入剪辑结果 |
 | PR 粗加工素材库 | `E:\PR导出` | 只读，不覆盖原始 MP4 |
-| 任务结果 | `C:\Project\永劫无间\123\<编号>.<素材文件名>` | 每个任务独立保存分析、时间线、预览和成片；全部派生文件只许落此，禁写项目根与源盘（路径铁律见 skill 内 `references/roughcut-launch.md §2.7`） |
+| 任务结果 | `C:\Project\永劫无间\123\<编号>.<素材文件名>` | 每个任务独立保存分析、时间线、预览和成片（成片正本见§7.1 E盘双轨，任务目录仅留副本/记录）；全部派生文件只许落此，禁写项目根与源盘（路径铁律见 skill 内 `references/roughcut-launch.md §2.7`） |
 
 原始素材永远不直接修改。所有剪切使用源时间码，最终成片从原始素材重新渲染，不从 720p 预览放大。
 
@@ -51,8 +51,9 @@
 ## 2. 已安装的共享工具基线
 
 > **剪辑任务第一动作（2026-10-05 立）**
-> 用户给素材要粗剪预览时，**先 `skill` 工具加载 `naraka-highlight-studio`**，再按它的
-> `references\` 干活；本文件只提供环境真源与项目铁律，不复述剪辑规格。
+> 用户给素材要粗剪预览时，**先 `skill` 工具加载 `cujian`**，再按它的
+> `references\` 干活；要精剪（BGM 卡点/特效/高燃成片）时加载 `jingjian`（输入必须为冻结粗剪线）；
+> 本文件只提供环境真源与项目铁律，不复述剪辑规格。
 > 用户的要求「不要问我，不要分段汇报，最后一次性给结论」写在
 > `docs\粗剪提示词.md`，但**那 211 行是 skill 不可见时代的加载器**——
 > 现在 skill 已可见（见文末「skill 可见性」），提示词可以只留触发语 + 素材路径。
@@ -154,7 +155,8 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 
 ## 7.1 成片归属与出 4K 后的收尾清理（固定步骤，不是可选项）
 
-**成片的唯一归属是 `E:\Cujian导出\<源文件名> cujian.mp4`。**
+**双轨归属：粗剪冻结重建 → `E:\Cujian导出\<源文件名> cujian.mp4`（cujian 产出）；
+精剪高燃包装 → `E:\Cujian导出\<源文件名> jingjian.mp4`（jingjian 产出）。**
 任务目录（`123\<编号>.<素材文件名>\`）**不得长期持有 4K 成片**——它只承载可再生的过程物与文本证据。
 
 > 2026-09-30 立。此前成片长期留在 `deliverables\`，导致 849 / 854 / 859 各自在任务目录与 E 盘
@@ -163,7 +165,7 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 出 4K 的正确顺序：
 
 ```text
-1. 渲 4K 到 E:\Cujian导出\<源文件名> cujian.mp4   ← 直接渲到交付目录，不进任务目录
+1. 渲 4K：粗剪冻结重建 → E:\Cujian导出\<源文件名> cujian.mp4；精剪高燃包装 → E:\Cujian导出\<源文件名> jingjian.mp4   ← 直接渲到交付目录，不进任务目录
 2. 验收：对 E 盘那份跑 scripts\verify_master.sh
 3. 收尾：& 'C:\Project\永劫无间\scripts\cleanup_after_master.ps1' -TaskDir '<任务目录>'
 ```
@@ -177,7 +179,7 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 ```
 
 **交付闸门（删任何东西之前先证明成片已落地）**：脚本先在 `E:\Cujian导出\` 找
-`<素材名>*.mp4`（非空）。**找不到就拒绝删除、一个字节都不删**，并报 `[BLOCKED]`
+`<素材名>*.mp4`（非空，后缀无关，`cujian.mp4` / `jingjian.mp4` 均为正本；双交付任务需两份正本都在才删）。**找不到就拒绝删除、一个字节都不删**，并报 `[BLOCKED]`
 ——因为丢成片的代价远大于留几个 GB。这是数据丢失护栏，优先级高于省磁盘。
 
 | 删（可再生，非证据） | 留（证据 + 编号依据） |
@@ -195,7 +197,7 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 脚本护栏（自带，缺一即拒）：`deliverables\` 无非空成片则只报 SKIP 不动手；任务目录不在 `123\` 直接子级则拒绝；
 待删路径解析后不在任务目录内则拒绝；先写 `reports\cleanup_log_after_master.md` 再删（无 log 的删除视为违规）；可重复执行。
 
-版本化命名与清理生命周期索引：预览 `preview\<序号>-review-vN.mp4`、字幕 `captions\<序号>-review-vN.srt`、时间线 `timeline\combat_episodes_vN.json` 三件套、验收 `reports\selfaudit/accept/reverify_<序号>_vN.md` 三分立、每次删除记 `reports\cleanup_log_vN.md`；成片仍为"源文件名 + cujian.mp4"。完整规则见 skill 内 `references/deliverables-and-qa.md` 命名与清理节。
+版本化命名与清理生命周期索引：预览 `preview\<序号>-review-vN.mp4`、字幕 `captions\<序号>-review-vN.srt`、时间线 `timeline\combat_episodes_vN.json` 三件套、验收 `reports\selfaudit/accept/reverify_<序号>_vN.md` 三分立、每次删除记 `reports\cleanup_log_vN.md`；成片双轨：粗剪"源文件名 + cujian.mp4"、精剪"源文件名 + jingjian.mp4"。完整规则见 skill 内 `references/deliverables-and-qa.md` 命名与清理节。
 
 ## Agent skills
 
@@ -209,7 +211,7 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 
 ### Autopilot
 
-后续工程开发默认使用 `autopilot` 全自动流程：理解、spec、拆票、构建、验证一轮走完；只有破坏性、对外可见或变更范围的决策才停下找人。视频剪辑仍以本文件和 `naraka-highlight-studio` 为准，autopilot 只用于项目本身的代码/文档修正。
+后续工程开发默认使用 `autopilot` 全自动流程：理解、spec、拆票、构建、验证一轮走完；只有破坏性、对外可见或变更范围的决策才停下找人。视频剪辑仍以本文件和 `cujian`（粗剪）/`jingjian`（精剪）为准，autopilot 只用于项目本身的代码/文档修正。
 
 **用 skill 工具按名字加载它，不要手抄绝对路径**——autopilot 及其子 skill 是用户级通用工程工具，由 harness 的用户级 skill 目录提供，本项目不存放也不修改副本。本项目跑 autopilot 时不写中央日志、不建任务标记（见 `docs/agents/autopilot-local.md` 项目本地化覆盖）。
 
@@ -219,7 +221,8 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 
 | 类别 | 内容 | 存放位置 | 怎么读 |
 |---|---|---|---|
-| **项目资产** | `naraka-highlight-studio`、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源** | 按项目相对路径 `skills\<name>\SKILL.md`；**不要在任何用户级 skill 目录里安装、复制或维护同名副本** |
+| **项目资产** | `cujian`（粗剪）、`jingjian`（精剪，输入必须为冻结粗剪线）、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源** | 按项目相对路径 `skills\<name>\SKILL.md`；**不要在任何用户级 skill 目录里安装、复制或维护同名副本** |
+| **已归档** | `naraka-highlight-studio` | `.scratch\archive\naraka-highlight-studio\` | 粗剪/精剪已拆分为 `cujian`/`jingjian`，旧 skill 整目录归档保留历史，不再作为任务入口 |
 | **用户级工具** | `autopilot` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录 | **用 skill 工具按名字加载**；本项目不存放、不修改其副本 |
 
 两条补充：
@@ -229,10 +232,10 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 
 ## 8. 高质量批量成片工作流
 
-当用户要求 BGM 卡点、关键节点特效、音画同步、批量处理多把对局或只接收最终成片时，使用项目内专属工作流原型：
+当用户要求 BGM 卡点、关键节点特效、音画同步、批量处理多把对局或只接收最终成片时，使用项目内精剪 skill（粗剪先行走 `cujian` 并冻结，`jingjian` 输入必须为冻结粗剪线）：
 
 ```text
-C:\Project\永劫无间\skills\naraka-highlight-studio\SKILL.md
+C:\Project\永劫无间\skills\jingjian\SKILL.md
 ```
 
 它负责把多把对局整理成批次，在有本地/用户提供 BGM 时分析实际音频，建立振刀/反打/击杀/大招/拆火等事件标记，生成节奏和效果时间线，并执行最终质量检查。项目内部仍保留可重建时间线、音频 stems、事件标记和缓存，用户交付默认只展示成片和必要的预览。
@@ -243,13 +246,13 @@ C:\Project\永劫无间\skills\naraka-highlight-studio\SKILL.md
 
 稳定规则写在 skill 中，个人风格写在 `style_profiles`，素材索引写在 `assets`，用户反馈写在 `feedback`。不要把某一首当前热门歌曲或一次性的特效偏好写死为永久规则。
 
-e系列升级索引（只索引不展开）：防漏扫e1 / 防中断尾e2 见 skill 内 `references/complete-combat-roughcut.md`（参数与尾窗升级）；预览对抗审e3 / 极限并行e4 / 冻结门禁2.0 e5 见 skill 内 `references/roughcut-launch.md §2/§3.6/§3.7` 与 `references/deliverables-and-qa.md` 门禁节；设计原稿见 `123\workflow_upgrade\e1-e5`，合入记录见 `123\workflow_upgrade\merge_log_e.md`。零星合并g见 skill 内 `references/roughcut-launch.md §2.8`（岛式合并/搭桥/单裁决/三态台账）；设计原稿见 `123\workflow_upgrade\g-shard-merge.md`，合入记录见 `123\workflow_upgrade\merge_log_g.md`。
+e系列升级索引（只索引不展开）：防漏扫e1 / 防中断尾e2 见 `cujian` 内 `references/complete-combat-roughcut.md`（参数与尾窗升级）；预览对抗审e3 / 极限并行e4 / 冻结门禁2.0 e5 见 `cujian` 内 `references/roughcut-launch.md §2/§3.6/§3.7` 与 `jingjian` 内 `references/deliverables-and-qa.md` 门禁节；设计原稿见 `123\workflow_upgrade\e1-e5`，合入记录见 `123\workflow_upgrade\merge_log_e.md`。零星合并g见 `cujian` 内 `references/roughcut-launch.md §2.8`（岛式合并/搭桥/单裁决/三态台账）；设计原稿见 `123\workflow_upgrade\g-shard-merge.md`，合入记录见 `123\workflow_upgrade\merge_log_g.md`。
 
 ## 8.1 一整场完整战斗（2026-10-01 立，最高优先级判据）
 
 **用户原话**：「我想要记录一整场完整的战斗。不管中间我去干啥，可能去舔包了、打药了，或者去拉扯了……中间可能有二三十秒我都是在观察的状态，其实那也算战斗的一部分。**我不想中间有断断档的时间，因为一断之后，战斗就不连贯了，观看体验就会很差。**」
 
-三条硬规则（完整版与逐条实证见 `skills/naraka-highlight-studio/references/complete-combat-roughcut.md` §2.2.1）：
+三条硬规则（完整版与逐条实证见 `skills/cujian/references/complete-combat-roughcut.md` §2.2.1）：
 
 1. **战斗窗口内不许挖洞** —— `(engage_start, outcome_time)` 内不允许任何 `excluded_inside`。战术停顿要**包含进来**，不是挖掉。
 2. **战斗窗口内不许切断** —— 相邻两场若战斗流程延续必须合并，间隙哪怕 6 秒也要包含。**洞清光了 ≠ 战斗没被切断，场边界本身也在切。**

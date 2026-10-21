@@ -15,7 +15,7 @@ set -uo pipefail
 cd '/c/Project/永劫无间' || exit 1
 
 PY='.video-tools/venv/Scripts/python.exe'
-GATE='skills/naraka-highlight-studio/scripts/qa_gate.py'
+GATE='skills/cujian/scripts/qa_gate.py'
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 

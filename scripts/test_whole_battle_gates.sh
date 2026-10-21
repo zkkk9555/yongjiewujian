@@ -24,7 +24,7 @@ set -uo pipefail
 
 PS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$PS_DIR/.." && pwd)"
-GATE="$ROOT/skills/naraka-highlight-studio/scripts/qa_gate.py"
+GATE="$ROOT/skills/cujian/scripts/qa_gate.py"
 EX="$ROOT/docs/lessons/examples"
 PY="$ROOT/.video-tools/venv/Scripts/python.exe"
 [ -x "$PY" ] || PY="$(command -v python3 || command -v python || true)"

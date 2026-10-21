@@ -1,0 +1,4 @@
+interface:
+  display_name: "Jingjian 精剪"
+  short_description: "冻结粗剪线 → 高燃精剪成片"
+  default_prompt: "Use $jingjian for finish-stage work only. Input must be a frozen roughcut timeline (timeline/combat_episodes_vN.json + review verdict). No re-selection from source, no boundary changes — send those back to cujian."

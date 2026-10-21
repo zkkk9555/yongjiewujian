@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cujian 粗剪"
+  short_description: "完整战斗粗剪，只做粗剪"
+  default_prompt: "Use $cujian for 完整战斗粗剪/高质量粗剪/保留整场战斗/粗剪: keep every fight intact from engagement through outcome, by default deliver 720p review preview with sidecar SRT and frozen timeline; on grant (输出 4K 成片) rebuild cujian.mp4. BGM/特效包装才用 jingjian."

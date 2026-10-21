@@ -23,7 +23,7 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PY="$ROOT/.video-tools/venv/Scripts/python.exe"
-GATE="$ROOT/skills/naraka-highlight-studio/scripts/qa_gate.py"
+GATE="$ROOT/skills/cujian/scripts/qa_gate.py"
 READER="$ROOT/scripts/read_episode_bounds.ps1"
 FIXTURE="$ROOT/docs/lessons/examples/864_v6_combat_episodes.json"
 TMP="$(mktemp -d)"

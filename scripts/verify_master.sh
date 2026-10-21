@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verify a 4K cujian master: probe + full decode + duration check.
+# Verify a 4K master (cujian/jingjian suffix-agnostic): probe + full decode + duration check.
 # Usage: verify_master.sh <master_mp4> <expected_program_sec> <log_file>
 #
 # expected_program_sec is the PROGRAM= value printed by read_episode_bounds.ps1

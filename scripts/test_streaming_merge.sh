@@ -18,8 +18,8 @@ set -uo pipefail
 cd '/c/Project/永劫无间' || exit 1
 
 PY='.video-tools/venv/Scripts/python.exe'
-STATE='skills/naraka-highlight-studio/scripts/orchestrator_state.py'
-MERGE='skills/naraka-highlight-studio/scripts/merge_partial.py'
+STATE='skills/cujian/scripts/orchestrator_state.py'
+MERGE='skills/cujian/scripts/merge_partial.py'
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 

@@ -11,8 +11,9 @@
 - 常见故障与“为什么不要重新安装”：[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 - 任务目录规范：[123/README.md](123/README.md)
 - 高质量批量成片工作流：[docs/CREATIVE_WORKFLOW.md](docs/CREATIVE_WORKFLOW.md)
-- 专属剪辑 skill：[skills/naraka-highlight-studio/SKILL.md](skills/naraka-highlight-studio/SKILL.md)
+- 专属剪辑 skill：粗剪 [skills/cujian/SKILL.md](skills/cujian/SKILL.md)；精剪 [skills/jingjian/SKILL.md](skills/jingjian/SKILL.md)（输入必须为冻结粗剪线）
 - **粗剪提示词（通用唯一版，日常就用这份）**：[docs/粗剪提示词.md](docs/粗剪提示词.md)
+- **精剪提示词（冻结粗剪线之后走这份）**：[docs/精剪提示词.md](docs/精剪提示词.md)
 - 生产依赖清单：[config/production_dependencies.json](config/production_dependencies.json)
 - 本地素材库说明：[assets/README.md](assets/README.md)
 - 单次图片上限硬红线：[IMAGE_LIMIT.md](IMAGE_LIMIT.md)（单轮 50 张封顶，看图前先数数）
@@ -23,7 +24,7 @@
 
 | 类别 | 内容 | 存放位置 |
 |---|---|---|
-| **项目资产** | `naraka-highlight-studio`、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源**。只在本项目内维护和迭代，**不复制到任何用户级 skill 目录**；处理本项目的视频任务时按项目相对路径 `skills\<name>\SKILL.md` 读取 |
+| **项目资产** | `cujian`（粗剪）、`jingjian`（精剪）、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源**。只在本项目内维护和迭代，**不复制到任何用户级 skill 目录**；处理本项目的视频任务时按项目相对路径 `skills\<name>\SKILL.md` 读取（旧 `naraka-highlight-studio` 已归档到 `.scratch\archive\naraka-highlight-studio\`，不再作为任务入口） |
 | **用户级工具** | `autopilot` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录。**用 skill 工具按名字加载**，本项目不存放、不修改副本 |
 
 项目资产要用 harness 支持的方式登记一遍才会被发现（各家发现路径不同）。**若哪天项目 skill 集体不显示，先查这一项。** 详见 `AGENTS.md` 的 **Skill 来源分两类**。
@@ -89,7 +90,7 @@ $ProjectRoot = 'C:\Project\永劫无间'
 工作窗口至少要拿到两样东西：
 
 1. **素材绝对路径**（如 `E:\PR导出\xxx.mp4`）。
-2. **模式**：要做「每一场战斗完整保留、战斗中不切走」就用 `naraka-highlight-studio` 的 `complete_combat_roughcut`（见 `skills/naraka-highlight-studio/SKILL.md`）。
+2. **模式**：要做「每一场战斗完整保留、战斗中不切走」就用 `cujian`（见 `skills/cujian/SKILL.md`）。
 
 > **当前环境（2026-09-29 实测）：预检退出码 0，`ok=7 warn=0 blocker=0`，全部可用，含字幕。**
 > 此前 venv 绑在一个被系统清理掉的临时缓存解释器上，2.64 GB 工具链文件全在却起不来；
@@ -122,15 +123,19 @@ $ProjectRoot = 'C:\Project\永劫无间'
 
 ### 4. 出 4K 成片之后会自动做一次收尾清理
 
+双轨归属：粗剪冻结重建 → `E:\Cujian导出\<源文件名> cujian.mp4`（cujian 产出）；
+精剪高燃包装 → `E:\Cujian导出\<源文件名> jingjian.mp4`（jingjian 产出）。
+成片正本直渲交付目录，不进任务目录。
+
 你说「输出 4K 成片」就等于授权整条链，末端自带清理，不用你再吩咐、也不需要你手动删：
 
 ```powershell
-& 'C:\Project\永劫无间\scripts\cleanup_after_master.ps1' -TaskDir 'C:\Project\永劫无间\123\<编号>.<素材名去扩展名>'
+& 'C:\Project\永劫无间\scripts\cleanup_after_master.ps1' -TaskDir 'C:\Project\永劫无间\123\<编号>.<素材文件名>'
 ```
 
 它只删可由源素材重新生成的东西——`preview\`（审片预览）、`cache\`（4K 分段中间件）、
-`shots\`（上千张分析抽帧）、`audio\`（转写音频），
-**保留任务目录本身、`timeline\`、`reports\`、`analysis\`、`deliverables\`、`captions\`**。
+`shots\`（上千张分析抽帧）、`audio\`（转写音频）、`deliverables\*.mp4` 成片副本（E 盘已有正本后），
+**保留任务目录本身、`timeline\`、`reports\`、`analysis\`、`captions\`，`deliverables\` 仅留记录，副本已删见 log**。
 
 849 实测：整个目录 3.39 GB，其中 3.38 GB 是上面那四样；真正值钱的是约 10 MB 的时间线与审计记录
 （"这段为什么留、那段为什么删、谁核过"）。**所以不要整目录手删**——那会把依据一起删掉，

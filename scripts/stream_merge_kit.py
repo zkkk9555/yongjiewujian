@@ -9,7 +9,7 @@ import importlib.util
 import pathlib
 import sys
 
-SKILLS = pathlib.Path("skills/naraka-highlight-studio/scripts")
+SKILLS = pathlib.Path("skills/cujian/scripts")
 
 
 def load(path, name):

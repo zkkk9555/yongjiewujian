@@ -11,7 +11,7 @@ import sys
 import tempfile
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-GATE = os.path.join(ROOT, "skills", "naraka-highlight-studio", "scripts", "qa_gate.py")
+GATE = os.path.join(ROOT, "skills", "cujian", "scripts", "qa_gate.py")
 TIMELINES = os.path.join(ROOT, "123")
 
 out_dir = tempfile.mkdtemp(prefix="covaudit")
