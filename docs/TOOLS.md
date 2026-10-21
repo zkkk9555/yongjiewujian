@@ -48,7 +48,7 @@ skills\ffmpeg-video-editor\SKILL.md
 
 它们提供"如何分析视频"和"如何构造 FFmpeg 剪辑命令"的操作规范；项目内的 `.video-tools\venv` 提供实际执行所需的 Python 工具。未来对话按项目相对路径读取并使用这些 skill，再调用项目固定环境。
 
-工程开发类 skill（`autopilot` 及其子 skill、`issue-tracker` / `domain` 类）是**用户级通用工具**，由 harness 的用户级 skill 目录提供，**用 skill 工具按名字加载**，本项目不存放也不修改它们的副本。两类 skill 的判据与读法见 `AGENTS.md` 的 **Skill 来源分两类**。
+工程开发类 skill（`automatt` 及其子 skill、`issue-tracker` / `domain` 类）是**用户级通用工具**，由 harness 的用户级 skill 目录提供，**用 skill 工具按名字加载**，本项目不存放也不修改它们的副本。两类 skill 的判据与读法见 `AGENTS.md` 的 **Skill 来源分两类**。
 
 ## FFmpeg 和 FFprobe
 

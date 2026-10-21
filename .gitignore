@@ -89,6 +89,10 @@ __pycache__/
 *.pyc
 *.pyo
 
+# ── 驱动/宿主自有文件（不属于本项目源码）────────────────────────────────
+# .dsh-ops\ 是 harness 的运行锁目录（0 字节 lock 文件），随 harness 存在而存在。
+.dsh-ops/
+
 # 注意：以下**必须**进版本库，不要加进忽略列表——
 #   *.py    skills\cujian\scripts\ 下的分析/校验脚本与 skills\jingjian\scripts\ 下的交付脚本是项目源码
 #   *.ps1   scripts\ 下 12 个门禁与工具脚本是项目源码

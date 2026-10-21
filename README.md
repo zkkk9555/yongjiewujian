@@ -25,7 +25,7 @@
 | 类别 | 内容 | 存放位置 |
 |---|---|---|
 | **项目资产** | `cujian`（粗剪）、`jingjian`（精剪）、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源**。只在本项目内维护和迭代，**不复制到任何用户级 skill 目录**；处理本项目的视频任务时按项目相对路径 `skills\<name>\SKILL.md` 读取（旧 `naraka-highlight-studio` 已归档到 `.scratch\archive\naraka-highlight-studio\`，不再作为任务入口） |
-| **用户级工具** | `autopilot` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录。**用 skill 工具按名字加载**，本项目不存放、不修改副本 |
+| **用户级工具** | `automatt` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录。**用 skill 工具按名字加载**，本项目不存放、不修改副本 |
 
 项目资产要用 harness 支持的方式登记一遍才会被发现（各家发现路径不同）。**若哪天项目 skill 集体不显示，先查这一项。** 详见 `AGENTS.md` 的 **Skill 来源分两类**。
 

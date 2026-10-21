@@ -209,11 +209,18 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 
 单上下文：根目录暂不建 `CONTEXT.md`，术语先沉淀在各任务 spec 的 Glossary；确有不可逆词汇再走 domain-modeling。见 `docs/agents/domain.md`。
 
-### Autopilot
+### Automatt（全自动工程流程）
 
-后续工程开发默认使用 `autopilot` 全自动流程：理解、spec、拆票、构建、验证一轮走完；只有破坏性、对外可见或变更范围的决策才停下找人。视频剪辑仍以本文件和 `cujian`（粗剪）/`jingjian`（精剪）为准，autopilot 只用于项目本身的代码/文档修正。
+automatt: on
 
-**用 skill 工具按名字加载它，不要手抄绝对路径**——autopilot 及其子 skill 是用户级通用工程工具，由 harness 的用户级 skill 目录提供，本项目不存放也不修改副本。本项目跑 autopilot 时不写中央日志、不建任务标记（见 `docs/agents/autopilot-local.md` 项目本地化覆盖）。
+后续工程开发默认使用 `automatt` 全自动流程：理解、spec、拆票、构建、验证一轮走完；只有破坏性、对外可见或变更范围的决策才停下找人。视频剪辑仍以本文件和 `cujian`（粗剪）/`jingjian`（精剪）为准，automatt 只用于项目本身的代码/文档修正。
+
+**用 skill 工具按名字加载它，不要手抄绝对路径**——automatt 及其子 skill 是用户级通用工程工具，由 harness 的用户级 skill 目录提供，本项目不存放也不修改副本。本项目跑 automatt 时不写中央日志、不建任务标记（见 `docs/agents/automatt-local.md` 项目本地化覆盖）。
+
+> 2026-10-22：旧名 `autopilot` 已改名 `automatt`（技能名、命令 `/automatt`、凭据行 `automatt: on`）。
+> 本项目原先既没有凭据行、又指着旧名，**等于没opt-in**——普通工程请求不会被自动驱动。
+> 上面那行 `automatt: on` 就是凭据行，**别删**；旧名 `autopilot` 在工作区内已全部改完
+> （`.scratch\` 下的历史记录不动，那是档案不是权威）。
 
 ### Skill 来源分两类（2026-10-06 起）
 
@@ -223,7 +230,7 @@ FFmpeg/FFprobe **不要硬编码路径**。正确做法是跑预检、读它解�
 |---|---|---|---|
 | **项目资产** | `cujian`（粗剪）、`jingjian`（精剪，输入必须为冻结粗剪线）、`ffmpeg-video-editor`、`ffmpeg-analyse-video-skill` | 项目内 `skills\`，**唯一来源** | 按项目相对路径 `skills\<name>\SKILL.md`；**不要在任何用户级 skill 目录里安装、复制或维护同名副本** |
 | **已归档** | `naraka-highlight-studio` | `.scratch\archive\naraka-highlight-studio\` | 粗剪/精剪已拆分为 `cujian`/`jingjian`，旧 skill 整目录归档保留历史，不再作为任务入口 |
-| **用户级工具** | `autopilot` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录 | **用 skill 工具按名字加载**；本项目不存放、不修改其副本 |
+| **用户级工具** | `automatt` 及其子 skill、`issue-tracker` / `domain` 类工程 skill | harness 的用户级 skill 目录 | **用 skill 工具按名字加载**；本项目不存放、不修改其副本 |
 
 两条补充：
 

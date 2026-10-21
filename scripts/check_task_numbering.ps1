@@ -125,7 +125,15 @@ if ($Json) {
 } else {
     Write-Output "123\ 任务目录: $($taskDirs.Count) 个，最大编号 $maxNum，下一个取 $($maxNum + 1)"
     if ($problems.Count -eq 0) {
-        Write-Output '[PASS] 编号唯一、命名完整、没有空壳目录'
+        # 2026-10-22 改：撞号只判 NOTE 时**不许再打印「编号唯一」**。
+        # 老措辞一边说 PASS 一边说「编号唯一」，下面却跟着两条 DUP_NUMBER，
+        # 读的人不知道该信哪句——这正是「34.888 / 34.889 撞号被上一轮挂起」
+        # 那类状态长期没人看的原因。
+        if ($notes.Count -gt 0) {
+            Write-Output ('[PASS] 命名完整、没有空壳目录；但**编号不唯一**（{0} 条占用登记见下）' -f $notes.Count)
+        } else {
+            Write-Output '[PASS] 编号唯一、命名完整、没有空壳目录'
+        }
     } else {
         foreach ($p in $problems) { Write-Output "  [VIOLATION] $p" }
     }
