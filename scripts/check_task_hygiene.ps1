@@ -47,11 +47,18 @@ foreach ($f in $rootLoose) {
     [void]$violations.Add(("ROOT_LOOSE:{0}" -f $f.FullName))
 }
 
-# --- 2. 0 字节日志/清单：多为误当成"应该删的 log"（Mid-run cleanup）----------
+# --- 2. 0 字节日志/清单：报 INFO，不判硬违规（2026-10-22 改）--------------------
+# 原来判硬违规的理由是「多为误当成应该删的 log」。但实测发现**空文件本身就是证据**：
+#   - `render_4k_stderr.log` 为 0 字节 = 渲染**没有 stderr 输出**（成功）；
+#   - `render_4k_stdout.log` 为 0 字节 = 脚本没有往 stdout 打印东西；
+#   - `squad_state_run.log` 为 0 字节 = 仪表跑完没有额外输出。
+# 这些是「当时确实什么也没发生」的落盘证据，删掉就把「当时是干净的」变成「查无此证」。
+# ⇒ 降为 INFO 并逐条列出；要清空它们请在收尾清理里显式记账（AGENTS.md §7.1）。
 $zeroLogs = @(Get-ChildItem -Recurse -LiteralPath $TaskDir -File -Force -ErrorAction SilentlyContinue |
               Where-Object { $_.Length -eq 0 -and $_.Name -match '\.(log|txt)$' })
-foreach ($f in $zeroLogs) {
-    [void]$violations.Add(("ZERO_BYTE:{0}" -f $f.FullName))
+if ($zeroLogs.Count -gt 0) {
+    Write-Output ("[INFO-ZERO] {0} zero-byte log/txt file(s) (kept on purpose: empty stderr = clean run):" -f $zeroLogs.Count)
+    foreach ($f in $zeroLogs) { Write-Output ("  " + $f.FullName) }
 }
 
 # --- 2b. timeline\ 只放时间线数据：图片/视频属于 shots\，放错就永远删不掉 ------
@@ -71,25 +78,35 @@ if (Test-Path -LiteralPath $tlRoot -PathType Container) {
     }
 }
 
-# --- 3. 旧预览：只留相邻两版（vN-1 及更早判 STALE_PREVIEW）--------------------
+# --- 3. 旧预览：报 INFO，不判硬违规（2026-10-22 改）----------------------------
+# 「只留相邻两版」的想法来自省磁盘。实测两件事：
+#   1) 母版出完后 `scripts\cleanup_after_master.ps1` 会删掉整个 `preview\`，本条其实已无对象；
+#   2) 出 4K 之前预览目录仍在，此时它正是**唯一能看的审片件**，按版本数删它没有收益。
+# ⇒ 降为 INFO 并逐条列出；预览目录的删除由收尾清理统一做（有 log 记账）。
 $pvNums = @(Get-ChildItem -LiteralPath (Join-Path $TaskDir 'preview') -File -Force -ErrorAction SilentlyContinue |
             ForEach-Object {
                 if ($_.Name -match '-review-v(\d+)\.mp4$') { [int]$Matches[1] }
                 elseif ($_.Name -match '-review-v(\d+)\.') { [int]$Matches[1] }
             } | Sort-Object -Unique)
 $staleNums = $pvNums | Select-Object -SkipLast 2
-foreach ($n in $staleNums) {
-    [void]$violations.Add(("STALE_PREVIEW:*-review-v{0}.mp4(+concat/decode)" -f $n))
+if ($staleNums.Count -gt 0) {
+    Write-Output ("[INFO-PREVIEW] {0} older preview version(s) (preview\ is removed wholesale by cleanup_after_master.ps1):" -f $staleNums.Count)
+    foreach ($n in $staleNums) { Write-Output ("  *-review-v{0}.mp4(+concat/decode)" -f $n) }
 }
 
-# --- 4. 旧时间线：只留相邻两版（vN-1 及更早判 STALE_TIMELINE）------------------
+# --- 4. 旧时间线：报 INFO，不判硬违规（2026-10-22 改）----------------------------
+# 这里原来判硬违规，但**版本血统是证据**：冻结门禁表的「边界集与上一版逐字节相同」
+# 这类结论（858 v3 就是）要靠历史版本当场比对才能复核，删掉就再也证不了。
+# 体积上也不值得：一份时间线 JSON 约 0.1 MB，19 个任务目录加起来不到 10 MB。
+# ⇒ 降为 INFO 并逐条列出；要瘦身请显式删除并在 `reports\cleanup_log_*.md` 里记账。
 $epNums = @(Get-ChildItem -LiteralPath (Join-Path $TaskDir 'timeline') -File -Force -ErrorAction SilentlyContinue |
             ForEach-Object {
                 if ($_.Name -match 'combat_episodes_v(\d+)\.json$') { [int]$Matches[1] }
             } | Sort-Object -Unique)
 $staleNums = $epNums | Select-Object -SkipLast 2
-foreach ($n in $staleNums) {
-    [void]$violations.Add(("STALE_TIMELINE:combat_episodes_v{0}.json" -f $n))
+if ($staleNums.Count -gt 0) {
+    Write-Output ("[INFO-TIMELINE] {0} older timeline version(s) kept as version-lineage evidence (AGENTS.md 7.1 keep-list):" -f $staleNums.Count)
+    foreach ($n in $staleNums) { Write-Output ("  combat_episodes_v{0}.json" -f $n) }
 }
 
 # --- 5. shots\ 零散取证帧：只提示，不判 FAIL -----------------------------------
@@ -102,10 +119,20 @@ if ($shotStray.Count -gt 0) {
     foreach ($f in $shotStray) { Write-Output ("  " + $f.FullName) }
 }
 
-# --- 6. 经验落盘：命名必须用任务目录号，缺失要报 --------------------------------
+# --- 6. 经验落盘：命名必须带任务目录号，缺失要报 ------------------------------
 # 这局学到了什么写在 reports\workflow_notes_<任务目录号>.md。命名过去混用过
-# 目录号和素材号（_849 / _15 / _863），collect_lessons.ps1 认不出来就没法判断
+# 目录号和素材号（_849 / _863），collect_lessons.ps1 认不出来就没法判断
 # 某条是否已吸收，经验池会退化成摆设。
+#
+# **判据是「前缀式」而不是「完全相等」（2026-10-22 改）**：
+# 一个任务目录可以合法地有多份经验（指挥层一份 + 每段一份），
+# 例如 34.889 有 workflow_notes_34.md / _34_commander*.md / _34_seg1..28.md 共 32 份。
+# 老判据要求文件名**恰好等于** workflow_notes_<号>.md，把这 32 份全判成违规
+# ——门禁一开就是 39 条噪声，真正的错（13.849 里的 _849.md、20.863 里的 _863.md）
+# 反而淹在里面。现在规则是：
+#   规范名  workflow_notes_<任务目录号>.md          （本任务的主经验文件）
+#   派生名  workflow_notes_<任务目录号>_<后缀>.md     （指挥层/分段等附属经验）
+# 两者都以「workflow_notes_<任务目录号>」开头，都算合规。
 #
 # 缺 notes 是 INFO 而不是 FAIL：并发扫描或简单渲染任务本来就没经验可写，
 # 判 FAIL 会制造大量噪声。真正要拦的是"写了但名字不对"——那份经验收不进池子。
@@ -120,12 +147,13 @@ if ($notesFiles.Count -eq 0) {
     Write-Output "[INFO-NOTES] reports\ has no workflow_notes*.md -- if this task learned anything, write it before the directory is archived"
 } elseif ($taskNum) {
     $expected = "workflow_notes_$taskNum.md"
-    $badNames = @($notesFiles | Where-Object { $_.Name -ne $expected })
+    $namePat = "^workflow_notes_${taskNum}(_.*)?\.md$"
+    $badNames = @($notesFiles | Where-Object { $_.Name -notmatch $namePat })
     foreach ($f in $badNames) {
-        [void]$violations.Add(("NOTES_NAME:{0}  (应为 {1}，否则 collect_lessons.ps1 认不出这条经验)" -f $f.Name, $expected))
+        [void]$violations.Add(("NOTES_NAME:{0}  (应为 {1} 或 workflow_notes_{1}_<后缀>.md，否则 collect_lessons.ps1 认不出这条经验)" -f $f.Name, $taskNum))
     }
     if ($badNames.Count -eq 0) {
-        Write-Output ("[INFO-NOTES] workflow notes present and correctly named: {0}" -f $expected)
+        Write-Output ("[INFO-NOTES] workflow notes present and correctly named: {0} (+{1} 附属文件)" -f $expected, ($notesFiles.Count - 1))
     }
 }
 

@@ -71,8 +71,13 @@ if (Test-Path -LiteralPath $TasksRoot -PathType Container) {
                 File      = $n.FullName
                 Bytes     = $n.Length
                 Kind      = 'workflow_notes'
-                # 命名合规：应为 workflow_notes_<任务目录号>.md
-                NameOk    = ($n.BaseName -eq ('workflow_notes_' + ($dir.Name -replace '^(\d+)\..*$', '$1')))
+                # 命名合规：规范名 workflow_notes_<任务目录号>.md，
+                # 派生名 workflow_notes_<任务目录号>_<后缀>.md（指挥层/分段等附属经验）。
+                # 2026-10-22 改：原判据要求**完全相等**，把一个任务目录里合法的
+                # 多份经验（34.889 有 32 份）全判成不合规 —— 39 条噪声里
+                # 真正的错只有 2 个（13.849 的 _849.md、20.863 的 _863.md）。
+                # 与 scripts\check_task_hygiene.ps1 §6 的判据保持一致。
+                NameOk    = ($n.BaseName -match ("^workflow_notes_" + ($dir.Name -replace '^(\d+)\..*$', '$1') + "(_.*)?$"))
             })
         }
     }
@@ -159,8 +164,18 @@ $absorbedIds = New-Object System.Collections.Generic.HashSet[string]
 foreach ($m in [regex]::Matches($poolRaw, '\|\s*(L-\d{3})\s*\|')) {
     [void]$absorbedIds.Add($m.Groups[1].Value)
 }
+# 来源键集合：**取 POOL 的第 2 列（来源）**，不是第 3 列（教训）。
+#
+# 2026-10-22 修：原正则 `\|\s*L-\d{3}\s*\|[^|]*\|\s*([^|]+?)\s*\|` 捕获的是
+# **教训列**（`| # | 来源 | 教训 | ... |` 的第 3 列），却被拿去和候选的
+# `$c.Source`（来源键）比 —— 两边根本不是同一个东西，于是「来源键机制」是死的：
+# POOL 里就算有一行的来源写着任务目录全名，也**一条候选都闭不掉**。
+# 实证：修前 POOL 已补齐 25 个逐局摘要行，脚本仍报「待升级 695 条，来自 23 个未收录的经验源」。
+#
+# 修后：来源列写任务目录全名 → 该目录的全部候选一次闭合（POOL 第 3 条硬规矩）。
+# 教训正文另有一路（$absorbedTexts），两条机制互不干扰。
 $absorbedSources = New-Object System.Collections.Generic.HashSet[string]
-foreach ($m in [regex]::Matches($poolRaw, '\|\s*L-\d{3}\s*\|[^|]*\|\s*([^|]+?)\s*\|')) {
+foreach ($m in [regex]::Matches($poolRaw, '(?m)^\|\s*L-\d{3}\s*\|\s*([^|]+?)\s*\|')) {
     [void]$absorbedSources.Add($m.Groups[1].Value.Trim())
 }
 # 教训正文也拿来匹配。只按「来源」匹配不可靠：同一批经验可能从任务目录的
