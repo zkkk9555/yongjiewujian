@@ -28,7 +28,10 @@
         & scripts\check_task_numbering.ps1
         & scripts\check_task_numbering.ps1 -Json
 
-    退出码：0 = 编号与命名都干净；1 = 有问题
+    退出码：0 = 没有硬违规（空壳目录 / 名字被截断）；1 = 有硬违规
+    注意：同一编号被多个非空目录占用**只算占用登记（NOTE）**，不算硬违规——
+    改号会作废任务目录里的绝对路径证据，是人拍板的事，不该让这道门天天红。
+    但占用存在时正文与 JSON 都会明说「编号不唯一」（JSON 字段 `unique: false`）。
 #>
 
 [CmdletBinding()]
@@ -117,10 +120,18 @@ if ($Json) {
         tasks_root = $tasksRoot
         task_dirs = $taskDirs.Count
         max_number = $maxNum
-        next_number = $maxNum + 1
+        next_number = ($maxNum + 1)
+        # `pass` = 没有**硬违规**（空壳目录 / 名字被截断）。
+        # `unique` = 编号是否唯一：撞号只判 NOTE（占用登记），不算硬违规——
+        # 已知占用（如 34.888 与 34.889）改号会作废两份任务目录里的绝对路径证据，
+        # 那是人拍板的事，不该让这道门天天红。
+        # 2026-10-22 改：原 JSON 的 `pass: true` 与正文「[PASS] 编号唯一」自相矛盾，
+        # 现在两个字段分开说。
+        pass = ($problems.Count -eq 0)
+        unique = ($notes.Count -eq 0)
+        notes_count = $notes.Count
         problems = @($problems)
         notes = @($notes)
-        pass = ($problems.Count -eq 0)
     } | ConvertTo-Json -Depth 5
 } else {
     Write-Output "123\ 任务目录: $($taskDirs.Count) 个，最大编号 $maxNum，下一个取 $($maxNum + 1)"

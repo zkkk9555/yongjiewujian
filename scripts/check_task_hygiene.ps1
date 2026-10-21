@@ -48,16 +48,17 @@ foreach ($f in $rootLoose) {
 }
 
 # --- 2. 0 字节日志/清单：报 INFO，不判硬违规（2026-10-22 改）--------------------
-# 原来判硬违规的理由是「多为误当成应该删的 log」。但实测发现**空文件本身就是证据**：
+# 原来判硬违规的理由是「多为误当成应该删的 log」。实测这些 0 字节文件有两种**相反**的含义：
 #   - `render_4k_stderr.log` 为 0 字节 = 渲染**没有 stderr 输出**（成功）；
-#   - `render_4k_stdout.log` 为 0 字节 = 脚本没有往 stdout 打印东西；
-#   - `squad_state_run.log` 为 0 字节 = 仪表跑完没有额外输出。
-# 这些是「当时确实什么也没发生」的落盘证据，删掉就把「当时是干净的」变成「查无此证」。
+#   - `adv6_namegrep.txt` 为 0 字节 = **那一次检测可能压根没跑起来**
+#     （`TROUBLESHOOTING.md` T3：「任何检测日志生成后必须逐段确认它非空。空日志 = 工具没跑起来 = 结论无效」）。
+# 所以这里**不能**一律当成「干净」——本条只负责**列出来**，判读归人：
+# 看到 0 字节的**检测类**日志，按 T3 逐个确认它不是空跑；0 字节的 **stderr/stdout** 才是「无输出」。
 # ⇒ 降为 INFO 并逐条列出；要清空它们请在收尾清理里显式记账（AGENTS.md §7.1）。
 $zeroLogs = @(Get-ChildItem -Recurse -LiteralPath $TaskDir -File -Force -ErrorAction SilentlyContinue |
               Where-Object { $_.Length -eq 0 -and $_.Name -match '\.(log|txt)$' })
 if ($zeroLogs.Count -gt 0) {
-    Write-Output ("[INFO-ZERO] {0} zero-byte log/txt file(s) (kept on purpose: empty stderr = clean run):" -f $zeroLogs.Count)
+    Write-Output ("[INFO-ZERO] {0} zero-byte log/txt file(s) -- 逐个判读：stdout/stderr 为空 = 无输出(正常)；" + "`n" + "             检测类日志为空 = 工具可能没跑起来（见 TROUBLESHOOTING.md T3），不要默认当成成功：" -f $zeroLogs.Count)
     foreach ($f in $zeroLogs) { Write-Output ("  " + $f.FullName) }
 }
 
@@ -142,7 +143,9 @@ if ($shotStray.Count -gt 0) {
 $taskNum = ''
 if ((Split-Path -Leaf $TaskDir) -match '^(\d+)\.') { $taskNum = $Matches[1] }
 $reportsDir = Join-Path $TaskDir 'reports'
-$notesFiles = @(Get-ChildItem -LiteralPath $reportsDir -File -Filter 'workflow_notes*.md' -Force -ErrorAction SilentlyContinue)
+# 经验文件按**递归**找，与 collect_lessons.ps1 的扫描面一致（2026-10-22 改）。
+# 原来只看 reports\ 顶层：落在任务根或子目录里的经验文件能绕过这道硬门。
+$notesFiles = @(Get-ChildItem -LiteralPath $TaskDir -Recurse -File -Filter 'workflow_notes*.md' -Force -ErrorAction SilentlyContinue)
 if ($notesFiles.Count -eq 0) {
     Write-Output "[INFO-NOTES] reports\ has no workflow_notes*.md -- if this task learned anything, write it before the directory is archived"
 } elseif ($taskNum) {

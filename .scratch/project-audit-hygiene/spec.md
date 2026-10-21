@@ -125,4 +125,15 @@ POOL 里只要有一行的「来源」列写着**任务目录全名**（如 `26.
   并在 `AGENTS.md` 补上凭据行 `automatt: on`（否则本项目以后不会被自动驱动）。
 - 项目本地化覆盖优先：不写中央日志、不建 `WORKFLOW-ACTIVE` 标记、JOURNAL 行不写。
 
+## 修订记录（本轮收尾时补记，实现与初稿有出入的地方）
+
+| 初稿写的 | 实际做的 | 为什么 |
+|---|---|---|
+| Testing Decisions：「对 **25 个**任务目录各跑一次」 | **24 个** | 票 03 删掉了 33.877 空壳（编号 33 恢复唯一）。故「缺 workflow_notes」也从初稿的「4 → 1」变成 **0**（24/24 覆盖） |
+| D6：「真正该改名的**只剩 2 个**」 | 改了 **7 个** | 真错的 2 个（`_849.md`/`_863.md`）之外，883 的 5 个 `workflow_notes_segN.md` 也不带目录号前缀，一并改成 `_29_segN.md` |
+| 票 02 只授权改经验命名判据 | 另把卫生门的 `ZERO_BYTE` / `STALE_PREVIEW` / `STALE_TIMELINE` 降为 INFO | 这三条硬违规和项目的保留规则冲突（0 字节 stderr 是「渲染无错」的证据；历史时间线版本是版本血统的证据）。**19 个目录因此长期 FAIL，等于逼人删证据。** 已在报告 P2-5、POOL L-157、`TROUBLESHOOTING.md` M14 登记 |
+| D2：靠来源键闭合（假定机制是活的） | 顺带修了机制本身 | `collect_lessons.ps1` 的来源键正则捕获的是 POOL 的**教训列**而不是来源列，**这条机制从未生效过**（修前 695 条待升级） |
+| — | 专题复盘改成**按文件名分别记账** | 原先所有 `docs\lessons\*.md` 共用一个键，池里有一行 `docs\lessons` 就会让**今后新写的专题复盘没读也被算成已吸收** |
+| Notes 里写的 `docs/agents/autopilot-local.md` | 已改名 `docs/agents/automatt-local.md` | 旧名迁移的一部分 |
+
 `Checks:` i18n Pass/N-A — N/A（本项目无 i18n）｜save Pass/N-A — N/A（无存档系统）｜BALANCE Pass/N-A — N/A（无平衡表）

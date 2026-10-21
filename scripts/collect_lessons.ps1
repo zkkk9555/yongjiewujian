@@ -90,7 +90,12 @@ if (Test-Path -LiteralPath $lessonsDir -PathType Container) {
         # 专题复盘的文件名带日期+任务号，如 2026-10-01_864-审片反馈与教训.md。
         # 把任务号抽出来当来源键，否则来源写成 "docs\lessons" 就永远和池里的
         # "864" 对不上，已吸收的会被反复报成待升级。
-        $key = 'docs\lessons'
+        #
+        # 2026-10-22 改：**其余专题按文件名分别记账**，不再共用一个 `docs\lessons` 键。
+        # 共用一个键的后果是：池里只要有一行来源写着 `docs\lessons`，
+        # **今后新写的任何一份专题复盘都会被算成「已吸收」——包括没读过的**。
+        # 现在键是 `docs\lessons\<文件名>`，只有被显式记过的那一份才算吸收。
+        $key = 'docs\lessons\' + $f.BaseName
         if ($f.BaseName -match '^\d{4}-\d{2}-\d{2}_(\d+)') { $key = $Matches[1] }
         [void]$candidates.Add([PSCustomObject]@{
             Source = $key

@@ -32,9 +32,10 @@
 **已完成（票 03 提交）。** 三处与 spec 的偏差：
 
 1. spec 说「7 处 `__pycache__`」→ 实测并删掉的是 **7 处**（`skills/cujian`、`skills/jingjian`
-   各一处 + 5 个任务目录的 `scripts_local`），与 spec 一致；但**它们会再生成**
-   （任何一次 python 运行都会重建），所以真正的修复是「precheck 把它报成 WARN 而不是当作故障」——
-   本轮预检已从 `ok=9 warn=2` 变成 `ok=10 warn=0`。
+   各一处 + 5 个任务目录的 `scripts_local`），与 spec 一致。**但要说明白**：它们会再生成
+   （任何一次 python 运行都会重建），所以**本轮没有改 `check_video_environment.ps1`**——
+   预检从 `ok=9 warn=2` 变成 `ok=10 warn=0`，**靠的是删掉产物，不是改了脚本**；
+   那条 WARN 本身按设计就是「可再生、已报出」。
 2. spec 说「`.gitignore` 补 `.dsh-ops/`」→ 顺手确认了 `dump_v3_out.txt` 其实**没有**被 gitignore
    （precheck 的附注说「*.txt is gitignored」与实际不符）——所以它是 untracked 而非被忽略，
    删掉才是正解；本轮已删。
