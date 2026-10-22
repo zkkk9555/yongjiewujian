@@ -160,6 +160,27 @@ if ($notesFiles.Count -eq 0) {
     }
 }
 
+# --- 7. 保留目录里不该有音视频（2026-10-22 立）--------------------------------
+# `shots\` `cache\` `preview\` 里的媒体是**已知**的可再生重量，收尾清理会整目录删掉；
+# 但**留在 `analysis\` `reports\` `timeline\` `captions\` 等保留目录里的音视频**没人管过——
+# 888 的 `analysis\autoeditor_ref.mp4`（344,518,665 B / 3840×2160 / 92 s）就是这么
+# 在任务结束后还占着 328.6 MiB 的（用户原话：「888 任务都结束了，为什么还有三百多兆的 video 吗」）。
+#
+# 判据：保留区里出现 **> 10 MB 的音视频文件** = 硬违规。
+# 阈值 10 MB 是为了不误伤取证用的零头小片段（886 的 reports\ 里有一批几十 KB 的联系表）。
+$keepRoots = @('analysis', 'reports', 'timeline', 'captions', 'deliverables')
+$MediaExt = '^\.(mp4|mkv|avi|mov|webm|m4v|m2ts|wmv|flv|wav|mp3|m4a|aac|flac)$'
+$strayBig = @(
+    Get-ChildItem -LiteralPath $TaskDir -Recurse -File -Force -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.Extension -match $MediaExt -and $_.Length -gt 10MB -and
+        -not ($keepRoots | Where-Object { $_.FullName -match ('\\' + [regex]::Escape($_) + '\\') })
+    }
+)
+foreach ($f in $strayBig) {
+    [void]$violations.Add(("STRAY_MEDIA:{0}  ({1:N1} MB)  —— 保留目录里不该留音视频：它可再生（源片在 E  盘完好，重跑一次就有），" -f $f.FullName, ($f.Length / 1MB)))
+}
+
 # --- 汇总 ----------------------------------------------------------------------
 
 Write-Output ("Checks: root-loose/zero-byte/misplaced-timeline/stale-preview/stale-timeline (+shot-info)")

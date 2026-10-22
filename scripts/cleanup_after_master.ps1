@@ -161,6 +161,34 @@ if ($localMasters.Count -gt 0) {
     $totalBytes += $mBytes
 }
 
+# --- 留在「保留区」里的音视频文件：也是可再生的，必须删 -------------------------
+# 2026-10-22 事故（用户原话：「888 任务都结束了，为什么还有三百多兆的 video 吗」）：
+# `analysis\autoeditor_ref.mp4` = 344,518,665 B / 3840×2160 / 92 s —— auto-editor 生成的
+# 4K 静音参考片。它能活下来是因为 §7.1 的分栏把 `analysis\` 整类列在**留**侧，
+# 而本脚本只删 preview\ cache\ shots\ audio\ 四个**目录**——
+# 于是「留在保留目录里的音视频」从来没被人管过。
+#
+# 为什么这些文件可删：源片在 E:\PR导出 里是完好的，auto-editor / FFmpeg 重跑一次就有；
+# 而它们携带的**结论**（静音段在哪、机器信号读数）都落在同名 JSON / CSV / 报告里。
+# ⇒ 规则：**任务目录里不留任何音视频文件**（deliverables\ 的成片副本由上一条单独处理）。
+$MediaExt = '^\.(mp4|mkv|avi|mov|webm|m4v|m2ts|ts|wmv|flv|wav|mp3|m4a|aac|flac)$'
+$strayMedia = @(
+    Get-ChildItem -LiteralPath $TaskDir -Recurse -File -Force -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.Extension -match $MediaExt -and
+        -not $_.FullName.StartsWith($localMasterDir + '\', [System.StringComparison]::OrdinalIgnoreCase)
+    }
+)
+if ($strayMedia.Count -gt 0) {
+    $sBytes = [int64]0
+    foreach ($m in $strayMedia) { $sBytes += $m.Length }
+    [void]$plan.Add([pscustomobject]@{
+        Dir = '（保留区里的音视频）'; Path = 'analysis\ 等保留目录内的音视频文件'
+        Files = $strayMedia.Count; Bytes = $sBytes
+    })
+    $totalBytes += $sBytes
+}
+
 if ($plan.Count -eq 0) {
     Say "[SKIP] nothing disposable left in $TaskDir (already cleaned)."
     exit 0
@@ -181,6 +209,7 @@ Say ("  任务目录现体积 {0:N2} GB -> 清理后约 {1:N2} GB" -f ($taskByte
 Say ''
 Say '保留：目录本身（编号靠它）、timeline\、reports\、analysis\、captions\ 及所有根级文件'
 Say '删除：preview\ cache\ shots\ audio\（可再生）+ deliverables\ 里的成片副本（E 盘已有正本）'
+Say '      + 保留目录里残留的音视频文件（可再生，2026-10-22 新增：888 的 analysis\autoeditor_ref.mp4 就是这么活下来的）'
 Say ''
 
 if ($WhatIf) {
@@ -256,6 +285,13 @@ foreach ($p in $plan) {
             # itself -- anything else recorded there must survive.
             foreach ($m in $localMasters) {
                 if ($m.FullName.StartsWith($TaskDir + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+                    Remove-Item -LiteralPath $m.FullName -Force -ErrorAction Stop
+                }
+            }
+        } elseif ($p.Dir -eq '（保留区里的音视频）') {
+            # 逐个文件删（不是删目录）：保留目录本身、里面的 JSON/CSV/报告一律留着。
+            foreach ($m in $strayMedia) {
+                if (Test-Path -LiteralPath $m.FullName) {
                     Remove-Item -LiteralPath $m.FullName -Force -ErrorAction Stop
                 }
             }

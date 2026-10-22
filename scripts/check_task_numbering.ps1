@@ -145,6 +145,22 @@ foreach ($num in ($byNumber.Keys | Sort-Object)) {
     }
 }
 
+# --- 检查 2b：目录名不该带文件扩展名（2026-10-22 立）---------------------------
+# 事故：30.884 的目录叫 `30.884永劫无间 2026-10-09 18-12-51.mp4`——**带扩展名**。
+# 成因不是素材有问题（源片真名就是 `884永劫无间 2026-10-09 18-12-51.mp4`，正常），
+# 是**建目录那一步没去扩展名**：§「目录名 = 源文件名去扩展名」的铁律没被执行到。
+# 后果一路传染：成片名成了 `884永劫无间 2026-10-09 18-12-51.mp4 cujian.mp4`。
+# 现在分配器（new_task_dir.ps1）会去扩展名，这道门负责兜住手工建的目录。
+foreach ($num in ($byNumber.Keys | Sort-Object)) {
+    foreach ($entry in $byNumber[$num]) {
+        if ($entry.Stem -match '\.(mp4|mkv|avi|mov|webm|m4v|m2ts|wmv|flv)$') {
+            $clean = $entry.Dir.Name -replace '\.(mp4|mkv|avi|mov|webm|m4v|m2ts|wmv|flv)$', ''
+            [void]$problems.Add(("DIR_HAS_EXTENSION: {0}  —— 目录名带了文件扩展名。目录名必须是「源文件名去扩展名」（123\README.md 建目录铁律）；" -f $entry.Dir.Name))
+            [void]$problems.Add(("DIR_HAS_EXTENSION_FIX: 改名成 {0}，并同步引用" -f $clean))
+        }
+    }
+}
+
 # --- 检查 3：0 文件的空壳任务目录 ------------------------------------------
 # **有索引行 = 分配器建的**：新任务目录刚建出来时本来就是空的（分析文件还没落），
 # 那不是缺陷，只是「刚开张」。所以空目录只有在**没有索引行**时才是硬违规
