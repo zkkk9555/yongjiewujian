@@ -75,22 +75,53 @@ try {
     Assert-True ($dirs.Count -eq 1) 'T3 同一素材没有多建目录' "实际 $($dirs.Count)"
 } finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
 
-# --- T4 并发：两个进程同时取号，必须拿到不同号 --------------------------------
+# --- T4 并发：两个进程**同时**取号，必须拿到不同号 ----------------------------
+# 注意：这里必须做**真正的并发**。第一版用 Start-Job，实测两个 job 是**串行**跑的
+# （启动各花 ~90 ms，第二个 job 起来时第一个已经结束）——那样的用例**把锁去掉也照样过**，
+# 守不住这轮的核心前提。
+# 现在用「起跑门」：两个子进程先各自写一个 ready 文件，然后**一起等 go 文件出现**，
+# go 文件一出现就同时冲进分配器 → 真的在锁上撞。
 $sb = New-Sandbox 't4'
+$helper = Join-Path $sb '_child_alloc.ps1'
+@'
+param([string]$Material, [string]$TasksRoot, [string]$GoFile, [string]$ReadyFile, [string]$OutFile, [string]$Script)
+Set-Content -LiteralPath $ReadyFile -Value 'ready' -Encoding ASCII
+while (-not (Test-Path -LiteralPath $GoFile)) { Start-Sleep -Milliseconds 20 }
+$out = & $Script -Material $Material -TasksRoot $TasksRoot 2>&1 | Out-String
+Set-Content -LiteralPath $OutFile -Value $out -Encoding UTF8
+'@ | Set-Content -LiteralPath $helper -Encoding UTF8
 try {
-    $jobs = @(
-        Start-Job -ScriptBlock { param($a, $r) & $a -Material '030素材F 2026-01-01 00-00-00' -TasksRoot $r } -ArgumentList $alloc, $sb
-        Start-Job -ScriptBlock { param($a, $r) & $a -Material '031素材G 2026-01-01 00-00-00' -TasksRoot $r } -ArgumentList $alloc, $sb
-    )
-    Start-Sleep -Milliseconds 150
-    $jobs | Wait-Job -Timeout 60 | Out-Null
-    $outs = @($jobs | ForEach-Object { Receive-Job $_ } | Out-String)
-    $jobs | Remove-Job -Force -ErrorAction SilentlyContinue
+    $goFile = Join-Path $sb 'go'
+    $procs = @()
+    foreach ($m in @('030素材F 2026-01-01 00-00-00', '031素材G 2026-01-01 00-00-00')) {
+        $tag = $m.Substring(0, 3)
+        $ready = Join-Path $sb ("ready_" + $tag)
+        $outF = Join-Path $sb ("out_" + $tag)
+        $procs += Start-Process -FilePath 'powershell.exe' -PassThru -WindowStyle Hidden -ArgumentList @(
+            '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $helper,
+            '-Material', $m, '-TasksRoot', $sb, '-GoFile', $goFile,
+            '-ReadyFile', $ready, '-OutFile', $outF, '-Script', $alloc
+        )
+    }
+    # 等两个子进程都就位（最多 20 秒）
+    $deadline = (Get-Date).AddSeconds(20)
+    while ((Get-ChildItem -LiteralPath $sb -Filter 'ready_*' -ErrorAction SilentlyContinue).Count -lt 2 -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 50
+    }
+    $readyCount = (Get-ChildItem -LiteralPath $sb -Filter 'ready_*' -ErrorAction SilentlyContinue).Count
+    Assert-True ($readyCount -eq 2) 'T4 两个子进程都就位（起跑门有效）' "实际 $readyCount"
+    # 放闸：两个进程从这一刻起真正同时冲进分配器
+    Set-Content -LiteralPath $goFile -Value 'go' -Encoding ASCII
+    $procs | ForEach-Object { $_.WaitForExit(60000) | Out-Null }
     $nums = @(Get-ChildItem -LiteralPath $sb -Directory -ErrorAction SilentlyContinue | ForEach-Object { [int]($_.Name -replace '^(\d+)\..*$', '$1') })
     Assert-True ($nums.Count -eq 2) 'T4 并发建了两个目录' "实际 $($nums.Count)"
     Assert-True (($nums | Sort-Object -Unique).Count -eq $nums.Count) 'T4 并发拿到的是两个不同的号' ("号：" + ($nums -join ','))
-    Assert-True (([string]($outs -join '')) -match 'CREATED') 'T4 两个都报告 CREATED' ''
-} finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
+    $outs = @(Get-ChildItem -LiteralPath $sb -Filter 'out_*' -ErrorAction SilentlyContinue | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 }) -join ''
+    Assert-True ($outs -match 'CREATED') 'T4 两个都报告 CREATED' ''
+} finally {
+    Get-Process -Name powershell -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $false } | Out-Null
+    Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 # --- T5 索引 ------------------------------------------------------------------
 $sb = New-Sandbox 't5'

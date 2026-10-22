@@ -67,7 +67,7 @@ function Normalize-Material([string]$name) {
     if ($n -match '[\\/]$') { $n = $n.TrimEnd('\', '/') }
     $leaf = Split-Path -Leaf $n
     $ext = [System.IO.Path]::GetExtension($leaf)
-    if ($ext -and $ext -match '^\.(mp4|mkv|mov|avi|webm|m4v)$') {
+    if ($ext -and $ext -match '^\.(mp4|mkv|mov|avi|webm|m4v|ts|m2ts|mts|flv|wmv)$') {
         $leaf = $leaf.Substring(0, $leaf.Length - $ext.Length)
     }
     return $leaf
@@ -105,7 +105,11 @@ function Read-Index {
             if ($line.StartsWith('#')) { continue }
             $p = $line -split "`t"
             if ($p.Count -ge 3) {
-                [void]$rows.Add([PSCustomObject]@{ Num = [int]$p[0]; Material = $p[1]; Created = $p[2]; Note = $(if ($p.Count -ge 4) { $p[3] } else { '' }) })
+                $n = 0
+                # 索引行坏了不能把整个脚本带崩——读不动就当这行没有，
+                # 但要让它**看得见**（门禁那边会报 INDEX 格式问题）。
+                if (-not [int]::TryParse($p[0], [ref]$n)) { continue }
+                [void]$rows.Add([PSCustomObject]@{ Num = $n; Material = $p[1]; Created = $p[2]; Note = $(if ($p.Count -ge 4) { $p[3] } else { '' }) })
             }
         }
     }
@@ -128,8 +132,13 @@ function Enter-SequenceLock([int]$timeoutSec) {
         try {
             return [System.IO.File]::Open($lockPath, [System.IO.FileMode]::OpenOrCreate, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
         } catch [System.IO.IOException] {
+            # 锁被别人占着（另一个会话正在取号）——等。
             if ((Get-Date) -gt $deadline) { return $null }
             Start-Sleep -Milliseconds 120
+        } catch {
+            # 锁文件拿不到（权限、路径被占成目录…）——不是「等一下就好」，直接报错。
+            Write-Output ("[FAIL] cannot take the sequence lock {0}: {1}" -f $lockPath, $_.Exception.Message)
+            exit 1
         }
     }
 }
@@ -174,19 +183,32 @@ if ($null -eq $lock) {
 }
 try {
     $dirs = Get-TaskDirs
+    $indexRows = Read-Index
 
     # 1) 幂等：同一素材已经有目录 → 复用，不新建
     foreach ($d in $dirs) {
         if ((Normalize-Material $d.Material) -eq $material) {
+            # 顺带把索引补上：目录可能是分配器上线之前建的（或手工建的），
+            # 索引里没有它 → 门禁会报 NO_INDEX_ROW。复用时补一行，门禁就干净了。
+            $known = $false
+            foreach ($r in $indexRows) {
+                if ($r.Num -eq $d.Num -and (Normalize-Material $r.Material) -eq $material) { $known = $true; break }
+            }
+            if (-not $known -and -not $DryRun) {
+                Write-IndexRow $d.Num $material $d.Created 'adopted-by-new_task_dir'
+            }
             Write-Output ("REUSE: {0}" -f $d.Full)
-            Write-Output ("       （同一素材已有任务目录，编号 {0}；不新建）" -f $d.Num)
+            Write-Output ("       （同一素材已有任务目录，编号 {0}；不新建{1}）" -f $d.Num, $(if ($known) { '' } else { '；已补写索引行' }))
             exit 0
         }
     }
 
     # 2) 单调取号：max + 1，占用则继续 +1
+    #    **max 要同时看目录和索引**：目录被删（交付后用户手删）但索引还在，
+    #    那个号仍然算用过——编号只增不重置，绝不复用。
     $maxNum = 0
     foreach ($d in $dirs) { if ($d.Num -gt $maxNum) { $maxNum = $d.Num } }
+    foreach ($r in $indexRows) { if ($r.Num -gt $maxNum) { $maxNum = $r.Num } }
     $num = $maxNum + 1
     $tries = 0
     while ($tries -lt 100) {
