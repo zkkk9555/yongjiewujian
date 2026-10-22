@@ -279,6 +279,7 @@
 |---|---|---|---|---|
 | L-156 | 860 | **「用户授权出 4K」不等于这一版被冻结** —— 授权只授权渲染，不改变冻结状态；未冻结就出母版时，**缺口必须随母版一起写在它的纸面上**（860 的 v7 预览没人看过，streak=0，母版照样出了） | 已吸收 | `jingjian/deliverables-and-qa.md` 母版随附冻结状态声明；`AGENTS.md` §7.1 |
 | L-157 | 2026-10-22 | **门禁的「硬违规」必须与项目的保留规则对齐** —— 卫生门把 0 字节 stderr（渲染无错＝干净）和历史时间线版本（版本血统的证据）判成硬违规，等于逼人删证据 | 已吸收 | `scripts/check_task_hygiene.ps1`（`ZERO_BYTE`/`STALE_PREVIEW`/`STALE_TIMELINE` 降为 INFO 并逐条列出）；体检报告 P2-5 |
+| L-158 | 2026-10-22 | **「读一个值 + 1 当成新值」在有并发写者时就是数据竞争** —— 两个对话挨着开，各自读到同一个 max=34，就各自建了 `34.X`；而门禁当时只把撞号判 NOTE，等于两条保险都没起作用 | 已吸收 | `scripts\new_task_dir.ps1`（加锁 + 同一素材幂等复用 + 索引台账）；`scripts\check_task_numbering.ps1` 撞号升硬违规 + 索引一致性检查；`123\README.md`「编号怎么取」；`docs\TROUBLESHOOTING.md`「任务编号撞车」 |
 
 ---
 
@@ -313,8 +314,8 @@
 | L-220 | 33.877永劫无间 2026-10-15 00-17-51 | **877 是一次没做完的开始**（只有 6 张标定帧）：本轮把帧移入 `33.887\reports\calib_877_t1039-1041\`，空壳目录已删 | 已吸收 | 一次性（残件）；帧已保留在 `123\33.887…\reports\calib_877_t1039-1041\` |
 | L-221 | 33.887永劫无间 2026-10-15 00-17-51 | **887 局的经验已分流**：规则级 5 条见 L-104–L-108；其余（27 路扫描、22 路对抗审、自审四遍、验收 A–D、删除段审计）判一次性。**注意：该局 v7 门禁总判是 NOT_FROZEN，母版出自 v8 时间线且无 v8 门禁表** | 已吸收 | 规则 → `complete-combat-roughcut.md` §2.1.2、`TROUBLESHOOTING.md` M5；缺口登记在 `docs\lessons\STATUS-2026-10-22.md` P0-1 |
 | L-222 | 34.888永劫无间 2026-10-15 16-33-46 | **888 局的经验已分流**：规则级 20 条见 L-109–L-129；其余为逐局记录 | 已吸收 | 规则 → `TROUBLESHOOTING.md` M1–M11、`complete-combat-roughcut.md` §2.1.2 |
-| L-223 | 34.889永劫无间 2026-10-15 22-11-13 | **889 局的经验已分流**：规则级 12 条见 L-130–L-141；其余（28 段扫描报告、段级 notes）为逐局记录 | 已吸收 | 规则 → `roughcut-launch.md` §3.8、`TROUBLESHOOTING.md` M1/M6、`jingjian/deliverables-and-qa.md` |
-| L-224 | 35.890永劫无间 2026-10-15 22-38-16 | **890 局的经验已分流**：规则级 14 条见 L-142–L-155；其余为逐局记录 | 已吸收 | 规则 → `complete-combat-roughcut.md` §2.1.2/§2.2.3、`TROUBLESHOOTING.md` M8/M9/M10、`jingjian/deliverables-and-qa.md` |
+| L-223 | 35.889永劫无间 2026-10-15 22-11-13 | **889 局的经验已分流**：规则级 12 条见 L-130–L-141；其余（28 段扫描报告、段级 notes）为逐局记录 | 已吸收 | 规则 → `roughcut-launch.md` §3.8、`TROUBLESHOOTING.md` M1/M6、`jingjian/deliverables-and-qa.md` |
+| L-224 | 36.890永劫无间 2026-10-15 22-38-16 | **890 局的经验已分流**：规则级 14 条见 L-142–L-155；其余为逐局记录 | 已吸收 | 规则 → `complete-combat-roughcut.md` §2.1.2/§2.2.3、`TROUBLESHOOTING.md` M8/M9/M10、`jingjian/deliverables-and-qa.md` |
 | L-225 | docs\lessons\STATUS-2026-10-22 | **本轮体检报告已逐条分流**：P0-1（887 缺 v8 冻结门禁表）登记为未闭合缺口；P0-2（两个 skill 未入库）已由提交 `cec3c84` 修掉；P1-4（来源键死机制）已修；P2-4（concat 说法未复现）记入「已被实测推翻」节；G6（streak 降级档待拍板）登记在报告第五节 | 已吸收 | `docs\lessons\STATUS-2026-10-22.md`（本轮体检报告）；规则 → L-104–L-155、M13、M14 |
 | L-226 | docs\lessons\STATUS-2026-10-06 | **2026-10-06 的工作流总账已读全文并分流**：§C 三件待拍板的事 → 报告的 G6（streak≥1 降级档，**已被 885/887 两局的母版事实上默认**）/G7（看门狗常驻 + partial 禁令）/G8（`opencode.db` 14.31 GB）；§B 三个缺口（Phase 2 编排进脚本 / 渐进式交付 / OCR 落地）→ Phase 2 已部分落地（`scripts\stream_merge_kit.py`、`orchestrator_state.py`），其余未动 | 已吸收 | `docs\lessons\STATUS-2026-10-22.md` 第五节（未闭合清单） |
 | L-227 | docs\lessons\AGENT-REPORTS | **Agent 报告索引（30 份子 Agent 报告的入口）** — 本身是索引不是规则；元教训「同源重复 = 增信为零」「变化驱动抽帧在本网完全失效」已分别落在 F-2 与 `TROUBLESHOOTING.md` M5 | 一次性 | 索引文件，原报告在 `.scratch\efficiency\` 与 `.scratch\image-budget\`；元教训 → `roughcut-launch.md` §3.8 F-2 |
