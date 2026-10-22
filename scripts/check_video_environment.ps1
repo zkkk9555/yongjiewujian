@@ -410,6 +410,32 @@ if (Test-Path -LiteralPath $numberingScript -PathType Leaf) {
     Add-Result 'NOTE' 'task numbering' "scripts\check_task_numbering.ps1 not found; skipped"
 }
 
+# --- Delivery-folder naming guard ----------------------------------------------
+#
+# 884 的母版叫 `884永劫无间 2026-10-09 18-12-51.mp4 cujian.mp4` —— 里面多了一个 .mp4。
+# 成因不是素材有问题（源片真名 `884永劫无间 2026-10-09 18-12-51.mp4` 是正常的），
+# 是**建目录那一步漏了去扩展名**，然后那个多余的 .mp4 一路传染到母版名。
+# 收尾脚本的交付闸门是「按素材名找 <material>*.mp4」，**对这种多一个扩展名的名字照样放行**
+# （它找的是前缀，不是全名），所以那道门抓不住——只有命名约定本身能抓。
+#
+# 约定：母版名 = 源文件名**去扩展名** + ` cujian.mp4`（或 ` jingjian.mp4`）。
+# WARN 不 BLOCK：名字难看不影响片子，但下次找文件会找不到。
+$deliveryDir = 'E:\Cujian导出'
+if (Test-Path -LiteralPath $deliveryDir -PathType Container) {
+    $badMasterNames = @(
+        Get-ChildItem -LiteralPath $deliveryDir -File -Filter '*.mp4' -Force -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -notmatch '^.+ (cujian|jingjian)\.mp4$' }
+    )
+    if ($badMasterNames.Count -gt 0) {
+        Add-Result 'WARN' 'delivery naming' ("母版名不符合「源文件名去扩展名 + ' cujian.mp4'」约定：" + (($badMasterNames | ForEach-Object { $_.Name }) -join ' | '))
+        Add-Result 'NOTE' 'delivery naming' "名字难看不影响片子，但会让下次按名找文件找不到；改名前先确认没有脚本/文档引用旧名。"
+    } else {
+        Add-Result 'PASS' 'delivery naming' ("all masters in {0} follow <source-stem> cujian.mp4 / jingjian.mp4" -f $deliveryDir)
+    }
+} else {
+    Add-Result 'NOTE' 'delivery naming' ("{0} not found; skipped" -f $deliveryDir)
+}
+
 # ---------------------------------------------------------------------------
 # Verdict
 # ---------------------------------------------------------------------------
