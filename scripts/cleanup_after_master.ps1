@@ -170,20 +170,38 @@ if ($localMasters.Count -gt 0) {
 #
 # 为什么这些文件可删：源片在 E:\PR导出 里是完好的，auto-editor / FFmpeg 重跑一次就有；
 # 而它们携带的**结论**（静音段在哪、机器信号读数）都落在同名 JSON / CSV / 报告里。
-# ⇒ 规则：**任务目录里不留任何音视频文件**（deliverables\ 的成片副本由上一条单独处理）。
-$MediaExt = '^\.(mp4|mkv|avi|mov|webm|m4v|m2ts|ts|wmv|flv|wav|mp3|m4a|aac|flac)$'
+#
+# 三条限定（2026-10-22 review 后收紧）：
+#  1) **只扫保留区**（analysis\ reports\ timeline\ captions\ deliverables\）——
+#     preview\ cache\ shots\ audio\ 里的音视频已经随整目录删除，算进去会**重复计数**
+#     （旧版本算出了负数的「清理后体积」）。
+#  2) **只删 > 10 MB 的**：和卫生门 `STRAY_MEDIA` 同一个阈值。
+#     小片段（审片员留在 reports\ 里的取证 clip）**是证据，不删**。
+#  3) `deliverables\` 里的成片副本由上面那条规则单独处理，这里不重复。
+$MediaExt = '^\.(mp4|mkv|avi|mov|webm|m4v|m2ts|wmv|flv|wav|mp3|m4a|aac|flac)$'
+$keepRoots = @('analysis', 'reports', 'timeline', 'captions', 'deliverables')
 $strayMedia = @(
     Get-ChildItem -LiteralPath $TaskDir -Recurse -File -Force -ErrorAction SilentlyContinue |
     Where-Object {
-        $_.Extension -match $MediaExt -and
-        -not $_.FullName.StartsWith($localMasterDir + '\', [System.StringComparison]::OrdinalIgnoreCase)
+        $f = $_
+        if ($f.Extension -notmatch $MediaExt) { return $false }
+        if ($f.Length -le 10MB) { return $false }
+        if (-not $f.FullName.StartsWith($localMasterDir + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+            # 不是 deliverables\ 里的成片副本 → 必须是保留区里的，才算这条规则的猎物
+            $inKeep = @($keepRoots | Where-Object { $f.FullName -match ('\\' + [regex]::Escape($_) + '\\') })
+            return ($inKeep.Count -gt 0)
+        }
+        return $false
     }
 )
 if ($strayMedia.Count -gt 0) {
     $sBytes = [int64]0
     foreach ($m in $strayMedia) { $sBytes += $m.Length }
     [void]$plan.Add([pscustomobject]@{
-        Dir = '（保留区里的音视频）'; Path = 'analysis\ 等保留目录内的音视频文件'
+        Dir = '（保留区里 >10MB 的音视频）'
+        # Path 必须是**真实路径**——收尾验证那一步会 Test-Path 它来决定「有没有残留」，
+        # 塞一句说明文字进去会让残留检查永远看不到这一条。
+        Path = ($strayMedia | Select-Object -First 1).FullName
         Files = $strayMedia.Count; Bytes = $sBytes
     })
     $totalBytes += $sBytes
@@ -288,7 +306,7 @@ foreach ($p in $plan) {
                     Remove-Item -LiteralPath $m.FullName -Force -ErrorAction Stop
                 }
             }
-        } elseif ($p.Dir -eq '（保留区里的音视频）') {
+        } elseif ($p.Dir -eq '（保留区里 >10MB 的音视频）') {
             # 逐个文件删（不是删目录）：保留目录本身、里面的 JSON/CSV/报告一律留着。
             foreach ($m in $strayMedia) {
                 if (Test-Path -LiteralPath $m.FullName) {
@@ -311,7 +329,23 @@ $afterBytes = [int64]0
 foreach ($f in (Get-ChildItem -LiteralPath $TaskDir -Recurse -File -Force -ErrorAction SilentlyContinue)) {
     $afterBytes += $f.Length
 }
-$stillThere = @($plan | Where-Object { Test-Path -LiteralPath $_.Path })
+# 残留检查：**按规则类型分别判**（2026-10-22 修）。
+# 老写法是 `Test-Path -LiteralPath $_.Path`——对「删目录」的规则对，
+# 对「删文件」的规则全错：
+#   * `deliverables\*.mp4` 规则的 Path 是**目录**，删完文件目录还在 → 永远报「有残留」；
+#   * 文件级规则的 Path 如果塞的是说明文字，Test-Path 拿它当相对路径 → 永远查不到。
+$stillThere = New-Object System.Collections.ArrayList
+foreach ($p in $plan) {
+    if ($p.Dir -eq 'deliverables\*.mp4') {
+        $left = @(Get-ChildItem -LiteralPath $localMasterDir -File -Filter '*.mp4' -Force -ErrorAction SilentlyContinue)
+        if ($left.Count -gt 0) { [void]$stillThere.Add($p.Dir) }
+    } elseif ($p.Dir -eq '（保留区里 >10MB 的音视频）') {
+        $left = @($strayMedia | Where-Object { Test-Path -LiteralPath $_.FullName })
+        if ($left.Count -gt 0) { [void]$stillThere.Add($p.Dir) }
+    } else {
+        if (Test-Path -LiteralPath $p.Path) { [void]$stillThere.Add($p.Dir) }
+    }
+}
 
 $verify = New-Object System.Collections.ArrayList
 [void]$verify.Add(('- 实际清理后任务目录体积：{0:N2} GB（清理前 {1:N2} GB）' -f ($afterBytes / 1GB), ($taskBytes / 1GB)))

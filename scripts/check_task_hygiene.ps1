@@ -161,24 +161,35 @@ if ($notesFiles.Count -eq 0) {
 }
 
 # --- 7. 保留目录里不该有音视频（2026-10-22 立）--------------------------------
-# `shots\` `cache\` `preview\` 里的媒体是**已知**的可再生重量，收尾清理会整目录删掉；
-# 但**留在 `analysis\` `reports\` `timeline\` `captions\` 等保留目录里的音视频**没人管过——
+# `shots\` `cache\` `preview\` `audio\` 里的媒体是**已知**的可再生重量，收尾清理会整目录删掉；
+# 但**留在 `analysis\` `reports\` `timeline\` `captions\` `deliverables\` 里的音视频**没人管过——
 # 888 的 `analysis\autoeditor_ref.mp4`（344,518,665 B / 3840×2160 / 92 s）就是这么
 # 在任务结束后还占着 328.6 MiB 的（用户原话：「888 任务都结束了，为什么还有三百多兆的 video 吗」）。
 #
-# 判据：保留区里出现 **> 10 MB 的音视频文件** = 硬违规。
+# 判据：**保留区**里出现 > 10 MB 的音视频 = 硬违规。
 # 阈值 10 MB 是为了不误伤取证用的零头小片段（886 的 reports\ 里有一批几十 KB 的联系表）。
+#
+# 2026-10-22 修：这个判据的第一版写错了两处——
+#   ① 内层 `Where-Object` 里的 `$_` 是**保留目录名字符串**，`$_.FullName` 是 $null，
+#      于是内层恒为空、判据恒为真 → **所有** >10MB 的媒体都被算成违规
+#      （连 `preview\` `shots\` `cache\` 里那些本来就该被删的也算）；
+#   ② 方向反了：本来要查「**在**保留区里」，写成了「**不在**保留区里」。
+# 现在先把文件绑到 $f，再按路径逐个保留区匹配；`preview\` `cache\` `shots\` `audio\`
+# 不在保留区清单里 → 天然被排除。
 $keepRoots = @('analysis', 'reports', 'timeline', 'captions', 'deliverables')
 $MediaExt = '^\.(mp4|mkv|avi|mov|webm|m4v|m2ts|wmv|flv|wav|mp3|m4a|aac|flac)$'
 $strayBig = @(
     Get-ChildItem -LiteralPath $TaskDir -Recurse -File -Force -ErrorAction SilentlyContinue |
     Where-Object {
-        $_.Extension -match $MediaExt -and $_.Length -gt 10MB -and
-        -not ($keepRoots | Where-Object { $_.FullName -match ('\\' + [regex]::Escape($_) + '\\') })
+        $f = $_
+        if ($f.Extension -notmatch $MediaExt) { return $false }
+        if ($f.Length -le 10MB) { return $false }
+        $inKeep = @($keepRoots | Where-Object { $f.FullName -match ('\\' + [regex]::Escape($_) + '\\') })
+        return ($inKeep.Count -gt 0)
     }
 )
 foreach ($f in $strayBig) {
-    [void]$violations.Add(("STRAY_MEDIA:{0}  ({1:N1} MB)  —— 保留目录里不该留音视频：它可再生（源片在 E  盘完好，重跑一次就有），" -f $f.FullName, ($f.Length / 1MB)))
+    [void]$violations.Add(("STRAY_MEDIA:{0}  ({1:N1} MB)  —— 保留目录里不该留 >10MB 的音视频：它可再生（源片在 E 盘完好，重跑一次就有），" -f $f.FullName, ($f.Length / 1MB)))
 }
 
 # --- 汇总 ----------------------------------------------------------------------

@@ -153,10 +153,9 @@ foreach ($num in ($byNumber.Keys | Sort-Object)) {
 # 现在分配器（new_task_dir.ps1）会去扩展名，这道门负责兜住手工建的目录。
 foreach ($num in ($byNumber.Keys | Sort-Object)) {
     foreach ($entry in $byNumber[$num]) {
-        if ($entry.Stem -match '\.(mp4|mkv|avi|mov|webm|m4v|m2ts|wmv|flv)$') {
-            $clean = $entry.Dir.Name -replace '\.(mp4|mkv|avi|mov|webm|m4v|m2ts|wmv|flv)$', ''
-            [void]$problems.Add(("DIR_HAS_EXTENSION: {0}  —— 目录名带了文件扩展名。目录名必须是「源文件名去扩展名」（123\README.md 建目录铁律）；" -f $entry.Dir.Name))
-            [void]$problems.Add(("DIR_HAS_EXTENSION_FIX: 改名成 {0}，并同步引用" -f $clean))
+        if ($entry.Stem -match '\.(mp4|mkv|avi|mov|webm|m4v|m2ts|mts|ts|wmv|flv)$') {
+            $clean = $entry.Dir.Name -replace '\.(mp4|mkv|avi|mov|webm|m4v|m2ts|mts|ts|wmv|flv)$', ''
+            [void]$problems.Add(("DIR_HAS_EXTENSION: {0}  —— 目录名带了文件扩展名。目录名必须是「源文件名去扩展名」（123\README.md 建目录铁律）。改成 {1}，并同步引用" -f $entry.Dir.Name, $clean))
         }
     }
 }

@@ -25,6 +25,7 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $here
 $alloc = Join-Path $here 'new_task_dir.ps1'
 $checker = Join-Path $here 'check_task_numbering.ps1'
+$hygiene = Join-Path $here 'check_task_hygiene.ps1'
 
 $script:fail = 0
 $script:pass = 0
@@ -180,6 +181,42 @@ try {
     $out = & $checker -TasksRoot $sb 2>&1 | Out-String
     Assert-True ($out -match 'NO_INDEX') 'T10 有目录没索引时报 NO_INDEX' $out.Trim()
     Assert-True ($LASTEXITCODE -eq 1) 'T10 有目录没索引时退出码是 1' "实际 $LASTEXITCODE"
+} finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
+
+# --- T11 门禁能抓「目录名带扩展名」--------------------------------------------
+$sb = New-Sandbox 't11'
+try {
+    New-Item -ItemType Directory -Path (Join-Path $sb '1.110素材O 2026-01-01 00-00-00.mp4') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $sb 'index.tsv') -Value "# 索引`n1`t110素材O 2026-01-01 00-00-00.mp4`t2026-01-01T00:00:00`tbackfill" -Encoding UTF8
+    $out = & $checker -TasksRoot $sb 2>&1 | Out-String
+    Assert-True ($out -match 'DIR_HAS_EXTENSION') 'T11 门禁报出 DIR_HAS_EXTENSION' $out.Trim()
+    Assert-True ($LASTEXITCODE -eq 1) 'T11 目录名带扩展名时退出码是 1' "实际 $LASTEXITCODE"
+} finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
+
+# --- T12/T13 卫生门能抓「保留区里的大音视频」，且不误伤 preview/cache/shots -----
+$sb = New-Sandbox 't12'
+try {
+    # 造一个 12 MB 的假视频（够大即可，判据只看大小与扩展名）
+    $big = Join-Path $sb 'analysis\ref.mp4'
+    New-Item -ItemType Directory -Path (Join-Path $sb 'analysis') -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $sb 'reports') -Force | Out-Null
+    $fs = [System.IO.File]::Create($big)
+    $fs.SetLength(12MB)
+    $fs.Dispose()
+    $out = & $hygiene -TaskDir $sb 2>&1 | Out-String
+    Assert-True ($out -match 'STRAY_MEDIA') 'T12 保留区里 >10MB 的音视频被报出来' $out.Trim()
+    Assert-True ($LASTEXITCODE -eq 1) 'T12 命中时退出码是 1' "实际 $LASTEXITCODE"
+
+    # T13：同样大的文件放在 preview\ / cache\ / shots\ 里 → **不该报**
+    # （第一版判据把方向写反了，连这些「本来就要被删」的文件都会算成违规）
+    Remove-Item -LiteralPath $big -Force
+    foreach ($d in @('preview', 'cache', 'shots')) {
+        New-Item -ItemType Directory -Path (Join-Path $sb $d) -Force | Out-Null
+        $p = Join-Path $sb "$d\seg.mp4"
+        $fs = [System.IO.File]::Create($p); $fs.SetLength(12MB); $fs.Dispose()
+    }
+    $out2 = & $hygiene -TaskDir $sb 2>&1 | Out-String
+    Assert-True ($out2 -notmatch 'STRAY_MEDIA') 'T13 preview/cache/shots 里的同尺寸音视频不报（方向没写反）' $out2.Trim()
 } finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
 
 Write-Output ''
