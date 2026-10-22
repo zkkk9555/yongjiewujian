@@ -132,6 +132,25 @@ try {
     Assert-True ($out -match 'MATERIAL_ORDER') 'T8 素材倒序被报出来（NOTE）' $out.Trim()
 } finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
 
+# --- T9 空根 + 没有索引 → 不该报违规（新克隆的仓就是这个样子）-----------------
+$sb = New-Sandbox 't9'
+try {
+    # 模拟新克隆：123\ 只有 README.md（规则文档，已入库），没有任务目录、没有索引
+    Set-Content -LiteralPath (Join-Path $sb 'README.md') -Value '# 规则文档' -Encoding UTF8
+    $out = & $checker -TasksRoot $sb 2>&1 | Out-String
+    Assert-True ($LASTEXITCODE -eq 0) 'T9 空根且无索引时退出码是 0' ("退出码 $LASTEXITCODE；输出：" + $out.Trim())
+    Assert-True ($out -notmatch '\[VIOLATION\].*NO_INDEX') 'T9 空根时不报 NO_INDEX 违规（只出 NOTE）' $out.Trim()
+} finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
+
+# --- T10 有任务目录但没有索引 → 硬违规 ----------------------------------------
+$sb = New-Sandbox 't10'
+try {
+    New-Item -ItemType Directory -Path (Join-Path $sb '1.100素材N 2026-01-01 00-00-00') -Force | Out-Null
+    $out = & $checker -TasksRoot $sb 2>&1 | Out-String
+    Assert-True ($out -match 'NO_INDEX') 'T10 有目录没索引时报 NO_INDEX' $out.Trim()
+    Assert-True ($LASTEXITCODE -eq 1) 'T10 有目录没索引时退出码是 1' "实际 $LASTEXITCODE"
+} finally { Remove-Item -LiteralPath $sb -Recurse -Force -ErrorAction SilentlyContinue }
+
 Write-Output ''
 Write-Output ("=== 结果：{0} 通过 / {1} 失败 ===" -f $script:pass, $script:fail)
 if ($script:fail -gt 0) { exit 1 }

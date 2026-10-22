@@ -154,7 +154,14 @@ if (Test-Path -LiteralPath $indexPath -PathType Leaf) {
         }
     }
 } else {
-    [void]$problems.Add("NO_INDEX: 123\index.tsv 不存在 —— 建目录请一律走 scripts\new_task_dir.ps1（它会建索引；历史目录用 -Backfill 补进来）")
+    # 没有索引文件：**只有在已经有任务目录时**才是问题。
+    # 新克隆的仓里 `123\` 只有 README.md（规则文档，已入库），没有任务目录也没有索引——
+    # 那种情况下「没有索引」是正常的，不该让预检变红。
+    if ($taskDirs.Count -gt 0) {
+        [void]$problems.Add("NO_INDEX: 123\index.tsv 不存在，但盘上已有 $($taskDirs.Count) 个任务目录 —— 建目录请一律走 scripts\new_task_dir.ps1（历史目录用它的 -Backfill 补进索引）")
+    } else {
+        [void]$notes.Add("NO_INDEX: 123\index.tsv 不存在（当前没有任务目录，属正常；建第一个目录时会自动生成）")
+    }
 }
 
 # --- 检查 5：素材顺序（用户规则：数字越大的素材往后排）-------------------------
