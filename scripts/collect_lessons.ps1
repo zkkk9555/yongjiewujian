@@ -74,7 +74,7 @@ if (Test-Path -LiteralPath $TasksRoot -PathType Container) {
                 # 命名合规：规范名 workflow_notes_<任务目录号>.md，
                 # 派生名 workflow_notes_<任务目录号>_<后缀>.md（指挥层/分段等附属经验）。
                 # 2026-10-22 改：原判据要求**完全相等**，把一个任务目录里合法的
-                # 多份经验（34.889 有 32 份）全判成不合规 —— 39 条噪声里
+                # 多份经验（35.889 有 32 份）全判成不合规 —— 39 条噪声里
                 # 真正的错只有 2 个（13.849 的 _849.md、20.863 的 _863.md）。
                 # 与 scripts\check_task_hygiene.ps1 §6 的判据保持一致。
                 NameOk    = ($n.BaseName -match ("^workflow_notes_" + ($dir.Name -replace '^(\d+)\..*$', '$1') + "(_.*)?$"))

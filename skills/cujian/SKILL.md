@@ -36,8 +36,10 @@ Output: C:\Project\永劫无间\123\<编号>.<素材文件名>
 
 1. **预检**：跑 `scripts\check_video_environment.ps1`（只读），以其输出为唯一环境真源；
    FFmpeg/FFprobe 路径运行时解析，不硬编码。不新建环境、不安装。
-2. **取号**：按 `123\README.md` 取号规则生成下一个编号，
-   建任务目录 `123\<编号>.<素材文件名>`；全部派生文件只落此目录。
+2. **取号**：**用分配器建目录，不要自己算编号**——
+   `& 'C:\Project\永劫无间\scripts\new_task_dir.ps1' -Material '<素材文件名>'`
+   （加锁 + 同一素材幂等复用 + 留 `123\index.tsv`；治「两个对话同时开 → 撞号」）。
+   规则详见 `123\README.md`。
 3. **batch manifest**：枚举去重输入素材，一个素材一个来源单元。
 4. **完整战斗分集**：按 `references/complete-combat-roughcut.md` 三层结构
    把候选分组为完整战斗 episode，前后扩展验边界，同场战术停顿合并，
